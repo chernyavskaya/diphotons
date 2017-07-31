@@ -12,6 +12,8 @@ from optparse import OptionParser, make_option
 from  pprint import pprint
 
 objs = []
+pdfName = []
+pdfNorm = []
 
 ##
 def mkcheb(ord,cat,label,ws,var="CMS_hgg_mass"):
@@ -74,8 +76,11 @@ def mkPdf(name,ord,cat,label,ws):
         pass
     
     pdf = ROOT.RooAddPdf("%s%d_%scat%d_pdf" % (name,ord,label,cat), "%s%d_%scat%d_pdf" % (name,ord,label,cat), ROOT.RooArgList(*pdfs), ROOT.RooArgList(*norms) )
+    pdfName.append("%s%d_%scat%d_pdf" % (name,ord,label,cat))
 
+        
     norm = ws.factory("model_%scat%d_norm[0,1.e+6]" % (label,cat))
+
     ## extpdf = ROOT.RooExtendPdf("%s%d_cat%d_extpdf" % (name,ord,cat), "%s%d_cat%d_extpdf" % (name,ord,cat), pdf, norm)
     extpdf = ROOT.RooExtendPdf("model_%scat%d" % (label,cat), "model_%scat%d" % (label,cat), pdf, norm)
     getattr(ws,"import")(pdf, ROOT.RooFit.RecycleConflictNodes())
@@ -99,7 +104,7 @@ def main(options,args):
     fin = ROOT.TFile.Open(options.file)
 
 #    samples = { "sig" : ["sigRv","sigWv"] , "bkg" : ["bkg"] }
-    samples = { "sig" : ["reducedTree_sig"] , "bkg" : ["reducedTree_bkg"] }
+    samples = { "sig" : ["reducedTree_sig"] , "bkg" : ["reducedTree_bkg"], "higgs" : ["reducedTree_bkg_3","reducedTree_bkg_4","reducedTree_bkg_5","reducedTree_bkg_6","reducedTree_bkg_7"] }
     trees = {}
 
     catdef = open(options.catdef)
@@ -114,7 +119,7 @@ def main(options,args):
     print cats
     ncat = int(options.ncat)
     
-    poly = [ 20, 200, 10000, 20000, 40000 ]
+    poly = [ 200, 500, 10000, 20000, 40000 ]
     
     nvars = len(varnames)
     bounds = [ [ float(cats[ivar*(ncat+1)+icat]) for ivar in range(nvars) ]  for icat in range(ncat+1) ]
@@ -239,10 +244,14 @@ def main(options,args):
                     order += 1
                 ## pdf = mkPdf("pol",order+2,icat,name.replace("model_",""),ws)
                 pdf = mkPdf("cheb",order+2,icat,name.replace("model_",""),ws)
+                mgg.setRange("blind1",100,115)
+                mgg.setRange("blind2",135,180)
+#                pdf.fitTo(data,ROOT.RooFit.Strategy(1),ROOT.RooFit.PrintEvalErrors(-1),ROOT.RooFit.Range("blind1,blind2"))
                 pdf.fitTo(data,ROOT.RooFit.Strategy(1),ROOT.RooFit.PrintEvalErrors(-1))
-                pdf.fitTo(data,ROOT.RooFit.Strategy(2))
+                pdf.fitTo(data,ROOT.RooFit.Strategy(2),ROOT.RooFit.Range("blind1,blind2"))
 
-                
+                pdfNorm.append(pdf.expectedEvents(ROOT.RooArgSet(mgg)))
+
     ws.writeToFile(options.out)
 
     datacard = open(options.out.replace("root","txt"),"w+")
@@ -254,7 +263,10 @@ kmax * number of nuisance parameters
 ----------------------------------------------------------------------------------------------------------------------------------\n""")
 
     datacard.write("shapes data_obs * %s cms_hgg:bkg_$CHANNEL\n" % options.out)
-    datacard.write("shapes bkg *      %s cms_hgg:model_bkg_$CHANNEL\n" % options.out)
+    for icat in range(ncat):
+        datacard.write("shapes bkg cat%d" % (icat) )
+        datacard.write(" %s cms_hgg:" % options.out)
+        datacard.write(pdfName[icat].replace("cat0","$CHANNEL")+"\n")
 
     for proc in procs:
         datacard.write("shapes %s *   %s cms_hgg:%s_$CHANNEL\n" % (proc,options.out,proc))
@@ -290,15 +302,19 @@ kmax * number of nuisance parameters
     datacard.write("process".ljust(20))
     for cat in allcats:
         for proc in range(len(procs)):
-            datacard.write((" %d" % -(proc+1)).ljust(5) )
+            if 'sig' in procs[proc]:
+                datacard.write((" %d" % -(proc+1)).ljust(5) )
+            else:    
+#                datacard.write(" 1".ljust(5) )
+                datacard.write((" %d" % (proc+1)).ljust(5) )
         datacard.write(" 1".ljust(5) )
     datacard.write("\n")
         
     datacard.write("rate".ljust(20))
-    for cat in allcats:
+    for icat in range(ncat):
         for proc in range(len(procs)):
             datacard.write(" -1".ljust(5) )
-        datacard.write(" 1".ljust(5) )
+        datacard.write(("%d" % pdfNorm[icat]).ljust(5) )
     datacard.write("\n")
 
     datacard.write("----------------------------------------------------------------------------------------------------------------------------------\n\n")

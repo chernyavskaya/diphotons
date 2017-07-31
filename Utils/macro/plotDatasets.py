@@ -32,6 +32,7 @@ def main(options,args):
         fin = ROOT.TFile.Open(file)
         ws = fin.Get("cms_hgg")
 
+
         fname = os.path.basename(file).replace(".root","")
         
         ws.exportToCint(fname)
@@ -51,7 +52,9 @@ def main(options,args):
                 fframe,dframe,txt = frames[cat]
                 
             model = ws.pdf("model_bkg_%s" % cat)
-            
+
+            print "model_bkg_%s" % cat
+
             deriv = model.derivative(mass,1)
             objs.append(deriv)
                         
@@ -59,8 +62,13 @@ def main(options,args):
             sig  = ws.data("sig_%s" % cat)
             rms  = sqrt(sig.covariance( mass, mass ))
             
-            bkg.plotOn(fframe,ROOT.RooFit.LineColor(colors[ifile]),ROOT.RooFit.Binning(80))
+#            bkg.plotOn(fframe,ROOT.RooFit.LineColor(colors[ifile]),ROOT.RooFit.Binning(80))
+            bkg.plotOn(fframe,ROOT.RooFit.LineColor(colors[ifile]),ROOT.RooFit.Binning(32),ROOT.RooFit.Invisible())
             model.plotOn(fframe,ROOT.RooFit.LineColor(colors[ifile]))
+
+            bkg.plotOn(fframe,ROOT.RooFit.LineColor(colors[ifile]),ROOT.RooFit.Binning(6,100,115))
+            bkg.plotOn(fframe,ROOT.RooFit.LineColor(colors[ifile]),ROOT.RooFit.Binning(18,135,180))
+
             bkgPerGeV = fframe.getObject( int(fframe.numItems() - 1) ).Eval(125.);
             
             deriv.plotOn(dframe,ROOT.RooFit.LineColor(colors[ifile]),ROOT.RooFit.Range(101,179))
@@ -71,7 +79,7 @@ def main(options,args):
             txt.append( "%s               : %g" % ( sig.GetName(), sig.sumEntries() ) )
             txt.append( "%s RMS           : %g" % ( sig.GetName(), rms ) )
             txt.append( "%s/GeV           : %g" % ( bkg.GetName(), bkgPerGeV ) )
-            txt.append( "%s eff S/sqrt(B)     : %g" % ( sig.GetName().replace("sig_",""), sig.sumEntries()/sqrt(bkgPerGeV*rms) ) )
+#            txt.append( "%s eff S/sqrt(B)     : %g" % ( sig.GetName().replace("sig_",""), sig.sumEntries()/sqrt(bkgPerGeV*rms) ) )
             txt.append( "%s               : %g" % ( bkg.GetName(), bkg.sumEntries() ) )
             txt.append( "" )
             
