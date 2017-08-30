@@ -8,7 +8,7 @@ processes = [
 "LT_output_GluGluHToGG_M-125_13TeV_powheg_pythia8.root",
 "LT_output_VBFHToGG_M-125_13TeV_powheg_pythia8.root",
 "LT_output_VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8.root",
-"LT_output_bbHToGG_M-125_4FS_yb2_13TeV_amcatnlo.root",
+"LT_output_bbHToGG_M-125_4FS_ybyt_13TeV_amcatnlo.root",
 "LT_output_ttHToGG_M125_13TeV_powheg_pythia8_v2.root",
 "LT_DoubleEG.root"
 ]

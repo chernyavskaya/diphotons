@@ -116,15 +116,17 @@ def main(options,args):
     varnames = options.variables
 
     cats = summary[options.ncat]["boundaries"]
-    print cats
     ncat = int(options.ncat)
     
-    poly = [ 200, 500, 10000, 20000, 40000 ]
+    poly = [ 0, 20, 500, 10000, 20000, 40000 ]
     
     nvars = len(varnames)
     bounds = [ [ float(cats[ivar*(ncat+1)+icat]) for ivar in range(nvars) ]  for icat in range(ncat+1) ]
 
+    print "var and boundaries"
+    print cats
     print bounds
+    print varnames
     
     cuts = []
     cats = []
@@ -152,6 +154,18 @@ def main(options,args):
         selection *= ROOT.TCut("%s > %g" % (sel,selcuts[isel]))
     for ivar,var in enumerate(varnames):
         selection *= ROOT.TCut("%s <= %g" % (var,bounds[0][ivar]))
+
+    #adding additional cuts for different selections
+    if "additionalCuts" in summary[options.ncat]:
+        additcuts = summary[options.ncat]["additionalCuts"]
+        print additcuts
+        for ivar, var in enumerate(summary[options.ncat]["additionalCuts"]):
+#            selection*= ROOT.TCut("%s > %g" % (var,additcuts[var][0]))
+#            selection*= ROOT.TCut("%s < %g" % (var,additcuts[var][1]))
+            print "----------------------additionalCuts-----------------"  
+
+    print selection
+
 
     for name,sel in cuts+cats+[("cat",catvar),("selection",selection)]:
         print name, sel.GetTitle()
@@ -239,11 +253,14 @@ def main(options,args):
                 norm = slice.Integral()
                 order = 0
                 while norm > poly[order]:
+                    print "norm-------"
+                    print norm
+                    print order
                     if order >= len(poly)-1:
                         break
                     order += 1
                 ## pdf = mkPdf("pol",order+2,icat,name.replace("model_",""),ws)
-                pdf = mkPdf("cheb",order+2,icat,name.replace("model_",""),ws)
+                pdf = mkPdf("cheb",order,icat,name.replace("model_",""),ws)
                 mgg.setRange("blind1",100,115)
                 mgg.setRange("blind2",135,180)
 #                pdf.fitTo(data,ROOT.RooFit.Strategy(1),ROOT.RooFit.PrintEvalErrors(-1),ROOT.RooFit.Range("blind1,blind2"))

@@ -26,7 +26,8 @@ def main(options,args):
             allcats.append( "cat%d" % icat  )
         else:
             for ibin in range(options.nbins):
-                allcats.append( "bin%d_cat%d" % (ibin,icat) )
+#                allcats.append( "bin%d_cat%d" % (ibin,icat) )
+                allcats.append( "subcat%d_cat%d" % (ibin,icat) )
 
     for ifile,file in enumerate(options.files):
         fin = ROOT.TFile.Open(file)
