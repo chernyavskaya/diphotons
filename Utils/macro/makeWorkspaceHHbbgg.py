@@ -298,6 +298,9 @@ kmax * number of nuisance parameters
         datacard.write(pdfName[icat]+"\n")
 
     for proc in procs:
+        #no bsm nodes in datacard
+        if "node" in proc:
+            continue
         datacard.write("shapes %s *   %s cms_hgg:%s_$CHANNEL\n" % (proc,options.out,proc))
     
     datacard.write("----------------------------------------------------------------------------------------------------------------------------------\n")
@@ -317,6 +320,8 @@ kmax * number of nuisance parameters
     datacard.write("bin".ljust(20))
     for cat in allcats:
         for proc in range(len(procs)+1):
+            if proc < len(procs) and 'node' in procs[proc]:
+                continue
             datacard.write((" %s" % cat).ljust(5) )
     datacard.write("\n")
 
@@ -324,6 +329,8 @@ kmax * number of nuisance parameters
     datacard.write("process".ljust(20))
     for cat in allcats:
         for proc in procs:
+            if "node" in proc:
+                continue
             datacard.write((" %s" % proc).ljust(5) )
         datacard.write(" bkg".ljust(5) )
     datacard.write("\n")
@@ -331,6 +338,8 @@ kmax * number of nuisance parameters
     datacard.write("process".ljust(20))
     for cat in allcats:
         for proc in range(len(procs)):
+            if "node" in procs[proc]:
+                continue
             if 'sig' in procs[proc]:
                 datacard.write((" %d" % -(proc+1)).ljust(5) )
             else:    
@@ -342,6 +351,8 @@ kmax * number of nuisance parameters
     datacard.write("rate".ljust(20))
     for icat in range(0,len(pdfNorm)):
         for proc in range(len(procs)):
+            if "node" in procs[proc]:
+                continue
             datacard.write(" -1".ljust(5) )
         datacard.write(("%d" % pdfNorm[allcats[icat]]).ljust(5) )
     datacard.write("\n")
