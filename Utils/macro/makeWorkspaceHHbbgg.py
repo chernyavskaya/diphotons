@@ -13,14 +13,14 @@ from  pprint import pprint
 
 objs = []
 pdfName = []
-pdfNorm = []
+pdfNorm = {}
 
 ##
 def mkcheb(ord,cat,label,ws,var="CMS_hgg_mass"):
     norms = []
     pdfs = []
     for i in range(ord):
-        norm = ws.factory("cheb%d_coeff%d_%scat%d[1,-10,10.]" % (ord,i,label,cat) )
+        norm = ws.factory("cheb%d_coeff%d_%scat%d[1,-1,10.]" % (ord,i,label,cat) )
         norm.setVal(1./float(i+1))
         objs.append(norm)
         norms.append(norm)
@@ -118,11 +118,16 @@ def main(options,args):
     cats = summary[options.ncat]["boundaries"]
     ncat = int(options.ncat)
     
-    poly = [ 0, 20, 500, 10000, 20000, 40000 ]
+    poly = [ 0, 30, 500, 10000, 20000, 40000 ]
     
     nvars = len(varnames)
     bounds = [ [ float(cats[ivar*(ncat+1)+icat]) for ivar in range(nvars) ]  for icat in range(ncat+1) ]
 
+    #add bsm nodes
+    if  "addBSMNodes" in options.__dict__.keys():
+        for i in range(2,13):
+            samples["sig_node_"+str(i)]=["reducedTree_sig_node_"+str(i)]
+        
     print "var and boundaries"
     print cats
     print bounds
@@ -160,8 +165,8 @@ def main(options,args):
         additcuts = summary[options.ncat]["additionalCuts"]
         print additcuts
         for ivar, var in enumerate(summary[options.ncat]["additionalCuts"]):
-#            selection*= ROOT.TCut("%s > %g" % (var,additcuts[var][0]))
-#            selection*= ROOT.TCut("%s < %g" % (var,additcuts[var][1]))
+            selection*= ROOT.TCut("%s > %g" % (var,additcuts[var][0]))
+            selection*= ROOT.TCut("%s < %g" % (var,additcuts[var][1]))
             print "----------------------additionalCuts-----------------"  
 
     print selection
@@ -267,7 +272,9 @@ def main(options,args):
                 pdf.fitTo(data,ROOT.RooFit.Strategy(1),ROOT.RooFit.PrintEvalErrors(-1))
                 pdf.fitTo(data,ROOT.RooFit.Strategy(2),ROOT.RooFit.Range("blind1,blind2"))
 
-                pdfNorm.append(pdf.expectedEvents(ROOT.RooArgSet(mgg)))
+#                pdfNorm.append(pdf.expectedEvents(ROOT.RooArgSet(mgg)))
+                catName=("%s_cat%d" % (name, icat)).replace("bkg_","")
+                pdfNorm[catName]=pdf.expectedEvents(ROOT.RooArgSet(mgg))
 
     ws.writeToFile(options.out)
 
@@ -280,10 +287,15 @@ kmax * number of nuisance parameters
 ----------------------------------------------------------------------------------------------------------------------------------\n""")
 
     datacard.write("shapes data_obs * %s cms_hgg:bkg_$CHANNEL\n" % options.out)
-    for icat in range(ncat):
-        datacard.write("shapes bkg cat%d" % (icat) )
+#    for icat in range(ncat):
+#        datacard.write("shapes bkg cat%d" % (icat) )
+#        datacard.write(" %s cms_hgg:" % options.out)
+#        datacard.write(pdfName[icat].replace("cat0","$CHANNEL")+"\n")
+
+    for icat in range(0,len(allcats)):
+        datacard.write("shapes bkg %s" % allcats[icat] )
         datacard.write(" %s cms_hgg:" % options.out)
-        datacard.write(pdfName[icat].replace("cat0","$CHANNEL")+"\n")
+        datacard.write(pdfName[icat]+"\n")
 
     for proc in procs:
         datacard.write("shapes %s *   %s cms_hgg:%s_$CHANNEL\n" % (proc,options.out,proc))
@@ -328,10 +340,10 @@ kmax * number of nuisance parameters
     datacard.write("\n")
         
     datacard.write("rate".ljust(20))
-    for icat in range(ncat):
+    for icat in range(0,len(pdfNorm)):
         for proc in range(len(procs)):
             datacard.write(" -1".ljust(5) )
-        datacard.write(("%d" % pdfNorm[icat]).ljust(5) )
+        datacard.write(("%d" % pdfNorm[allcats[icat]]).ljust(5) )
     datacard.write("\n")
 
     datacard.write("----------------------------------------------------------------------------------------------------------------------------------\n\n")

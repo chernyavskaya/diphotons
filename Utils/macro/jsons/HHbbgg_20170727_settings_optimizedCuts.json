@@ -8,10 +8,20 @@
     "subcategories": [
 	 [
             "subcat0",
-            "MX >350 && Mjj>100 && Mjj<140"
+            "MX >250. && MX<=340."
+        ],
+	 [
+            "subcat1",
+            "MX >340. && MX<=480."
+        ],
+	 [
+            "subcat2",
+            "MX >480."
         ]
+
 ], 
-"variables": [
+	"addBSMNodes":1,
+	"variables": [
 	"MVAOutput"
 	],
      	"selections": []
