@@ -1,0 +1,14 @@
+{
+    "file" : "/afs/cern.ch/work/m/micheli/CMSSW_8_0_26_patch1/src/diphotons/Utils/macro/files/oldAnalysis/WS/LT_TotalWS.root",
+    "observable": [
+        "mgg", 
+        100.000, 
+        180.000
+    ], 
+    "subcategories": [], 
+"variables": [
+	"cut_based_ct"
+	],
+     	"selections": []
+}
+
