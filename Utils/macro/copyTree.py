@@ -26,10 +26,11 @@ for proc in processes:
     chain = ROOT.TChain(oldtree.GetName())
 
     
-    newfile = ROOT.TFile(str("files/oldAnalysis/WS/"+proc),"recreate")
+    newfile = ROOT.TFile(str("files/oldAnalysis_optimized_Mjj/WS/"+proc),"recreate")
     chain.Add(str(fileDir+ROOT.TString(proc)))
     
-    the_cut =ROOT.TString("mjj>100 && mjj<140 && HHTagger>0.6 && isSignal")
+#    the_cut =ROOT.TString("mjj>100 && mjj<140 && HHTagger>0.6 && isSignal")
+    the_cut =ROOT.TString("mjj>95 && mjj<155 && HHTagger>0.6 && isSignal")
 
     newtree = chain.CopyTree(the_cut.Data())
     print "Processed: "
