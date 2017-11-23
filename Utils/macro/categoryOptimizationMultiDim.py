@@ -16,6 +16,7 @@ objs = []
 # -----------------------------------------------------------------------------------------------------------
 def loadSettings(cfgs,dest,macros):
     for cfg in cfgs.split(","):
+        print "##############",cfg
         cf = open(cfg)
         cont = cf.read() % macros
         settings = json.loads(cont)
