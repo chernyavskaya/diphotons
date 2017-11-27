@@ -19,7 +19,8 @@
 				 "minusDeltaMjjMax := -(Mjj-125)"
 				 ],
 
-	"selection"           : "1",
+	"#selection"           : "1",
+	"selection"          : "Mjj > 95 && Mjj < 150 && MX>250",
 	"selectioncuts"       : [],
         "subcategories"       : [],
 
@@ -30,7 +31,6 @@
                                  ],
         "range"               : [3], "##" : "ncats to optimize",
         "#range"               : [2,3,4,5],
-        "#selection"          : "MX >= 200",
 	"#subcategories"      : [ ["MXbin0","MX>=250 && MX<340"],
 				 ["MXbin1","MX>=340 && MX<480"],
 				 ["MXbin2","MX>=480"]
@@ -39,38 +39,6 @@
 				["deltaMjjMin",[-70,70.0,5.0],-20]
                                 ],
 
-	"##" : "--------------------------------------------------------------",
-	"##" : "MX bins",
-	"##" : "--------------------------------------------------------------",
-	"#selection"           : "MVAOutput >= 0.55",
-        "#variables"           : [["MXcap", [200.0,800.0,20.0],350.0]
-                                 ],
-        "#range"               : [2,3,4],
-	"#selection"          : "Mjj > 95 && Mjj < 155",
-	"#subcategories"      : [ ["cat0","MVAOutput >= 0.99"],
-				  ["cat1","MVAOutput <  0.99 && MVAOutput >= 0.975" ],
-				  ["cat2","MVAOutput <  0.975 && MVAOutput >= 0.54" ]
-				 ],
-	
-
-        "#subcategories"      : [["low_mass","MX < 400"],
-                                ["high_mass","MX >= 400"]
-       			 ],
-	"#subcategories"      : [ ["MXbin0","MX>=250 && MX<340"],
-				 ["MXbin1","MX>=340 && MX<480"],
-				 ["MXbin2","MX>=480"]
-				 ],
-	"#subcategories"      : [ ["MXbin0","MX>=250 && MX<340"],
-				 ["MXbin1","MX>=340 && MX<480"],
-				 ["MXbin2","MX>=480 && MX<660"],
-				 ["MXbin3","MX>660"]
-				 ],
-	"#subcategories"      : [ ["MXbin0","MX>=250 && MX<330"],
-				 ["MXbin1","MX>=330 && MX<430"],
-				 ["MXbin2","MX>=430 && MX<530"],
-				 ["MXbin3","MX>=530 && MX<690"],
-				 ["MXbin4","MX>690"]
-				 ],
         "###" : "----------------------------------------------------------------------------------------------",
         "###" : "Signal and background processes",
         "###" : "----------------------------------------------------------------------------------------------",
