@@ -257,8 +257,9 @@ def modelBuilders(trees, type, obs, varlist, sellist, weights, shapes, minevents
         modelBuilder = ROOT.SecondOrderModelBuilder(type, modelName, obs, tree, varlist, sellist, "_weight")
         if name in shapes:
             modelBuilder.getModel().setShape( getattr(ROOT.SecondOrderModel,shapes[name]) )
-        if name in minevents:
-            modelBuilder.getModel().minEvents( minevents[name] )
+        for value in minevents.keys():
+            if value in name:
+                modelBuilder.getModel().minEvents( minevents[value] )
         if name in constrained:
             cname = "normConstraint%s" % name
             constraint = ROOT.RooRealVar(cname,cname,1.)
