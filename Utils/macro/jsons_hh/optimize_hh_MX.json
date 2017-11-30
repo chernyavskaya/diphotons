@@ -34,7 +34,7 @@
         "#range"               : [2,3,4],
 	"subcategories"      : [ ["cat0","MVAOutputTransformed >= 0.729"],
 				  ["cat1","MVAOutputTransformed <  0.729 && MVAOutputTransformed >= 0.520" ],
-				  ["cat2","MVAOutputTransformed <  0.520 && MVAOutputTransformed >= 0.298" ]
+				  ["cat2","MVAOutputTransformed <  0.520 && MVAOutputTransformed >= 0.299" ]
 				 ],
         "###" : "----------------------------------------------------------------------------------------------",
         "###" : "Signal and background processes",
@@ -60,7 +60,7 @@
 
         "weights"             : { "signal" : "2.*weight", "non_res" : "weight", "res" : "weight"  },
         "##" : "'Ultraviolet' cutoff in number of events",
-	    "minevents"           : { "non_res" : 10.0  },
+	    "minevents"           : { "non_res" : 1.5  },
         
         "###" : "----------------------------------------------------------------------------------------------",
         "##" : "When loading previous steps only look at ncat in [2:5]",

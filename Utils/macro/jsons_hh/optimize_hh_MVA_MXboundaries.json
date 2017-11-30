@@ -31,9 +31,9 @@
                                  ],
         "range"               : [3], "##" : "ncats to optimize",
         "#range"               : [2,3,4,5],
-	"subcategories"      : [ ["MXbin0","MX>=250 && MX<385"],
-				 ["MXbin1","MX>=385 && MX<560"],
-				 ["MXbin2","MX>=560"]
+	"subcategories"      : [ ["MXbin0","MX>=250 && MX<319"],
+				 ["MXbin1","MX>=319 && MX<438"],
+				 ["MXbin2","MX>=438"]
 				 ],
 	"#selectioncuts"      : [["minusDeltaMjjMax",[-70,70.0,5.0],-20],
 				["deltaMjjMin",[-70,70.0,5.0],-20]
@@ -63,7 +63,7 @@
 
         "weights"             : { "signal" : "2.*weight", "non_res" : "weight", "res" : "weight"  },
         "##" : "'Ultraviolet' cutoff in number of events",
-	    "minevents"           : { "non_res" : 10.0  },
+	    "minevents"           : { "non_res" : 1.5  },
         
         "###" : "----------------------------------------------------------------------------------------------",
         "##" : "When loading previous steps only look at ncat in [2:5]",

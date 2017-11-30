@@ -63,7 +63,7 @@
 
         "weights"             : { "signal" : "2.*weight", "non_res" : "weight", "res" : "weight"  },
         "##" : "'Ultraviolet' cutoff in number of events",
-	    "minevents"           : { "non_res" : 10.0  },
+	    "minevents"           : { "non_res" : 10},
         
         "###" : "----------------------------------------------------------------------------------------------",
         "##" : "When loading previous steps only look at ncat in [2:5]",
