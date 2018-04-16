@@ -1,0 +1,7 @@
+{
+        "signals"             : {
+        "signal"               : [
+				  ["reducedTree_sig","1"]
+				  ]
+            }
+}

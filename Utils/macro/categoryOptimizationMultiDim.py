@@ -16,6 +16,7 @@ objs = []
 # -----------------------------------------------------------------------------------------------------------
 def loadSettings(cfgs,dest,macros):
     for cfg in cfgs.split(","):
+        print "##############",cfg
         cf = open(cfg)
         cont = cf.read() % macros
         settings = json.loads(cont)
@@ -176,10 +177,12 @@ def mergeTrees(tfile,sel,outname,trees,aliases):
         out = tryread.CopyTree("")
     else:
         for name,selection in trees:            
-            tree=tfile.Get(name)
+            tree=tfile.Get(str(name))
+            print(name,tree)
             if not tree:
                 print "Could not read tree %s " % name
                 print " from %s" % tfile.GetTitle()
+                tfile.ls()
                 sys.exit(-1)
             for aname, definition in aliases:
                 tree.SetAlias( aname,definition )
@@ -254,8 +257,9 @@ def modelBuilders(trees, type, obs, varlist, sellist, weights, shapes, minevents
         modelBuilder = ROOT.SecondOrderModelBuilder(type, modelName, obs, tree, varlist, sellist, "_weight")
         if name in shapes:
             modelBuilder.getModel().setShape( getattr(ROOT.SecondOrderModel,shapes[name]) )
-        if name in minevents:
-            modelBuilder.getModel().minEvents( minevents[name] )
+        for value in minevents.keys():
+            if value in name:
+                modelBuilder.getModel().minEvents( minevents[value] )
         if name in constrained:
             cname = "normConstraint%s" % name
             constraint = ROOT.RooRealVar(cname,cname,1.)
@@ -368,6 +372,10 @@ def optimizeMultiDim(options,args):
         options.infile = args[0]
     fin = ROOT.TFile.Open(options.infile)
     print fin
+    if options.sigfile != "":
+        sin = ROOT.TFile.Open(options.sigfile)
+    else:
+        sin = fin
 
     wd = os.getcwd()
     print wd
@@ -406,8 +414,18 @@ def optimizeMultiDim(options,args):
     optimizer = ROOT.CategoryOptimizer( minimizer, ndim )
     for isel in range(sellist.getSize()):
         sel = sellist[isel]
-        print sel.GetName(), options.fix        
-        if sel.GetName() in options.fix:
+        print sel.GetName(), options.fix
+        fix = {}
+        for cut in options.fix:
+            if ":" in cut:
+                name,val = cut.split(":")
+                val = float(val)
+            else:
+                name,val = cut,None
+            fix[name] = val
+        if sel.GetName() in fix:
+            val = fix[sel.GetName()]
+            if val != None: sel.setVal(val)
             optimizer.addFixedOrthoCut(sel.GetName(),sel.getVal())
         else:
             optimizer.addFloatingOrthoCut(sel.GetName(),sel.getVal(),(sel.getMax()-sel.getMin())/sel.getBins(),sel.getMin(),sel.getMax())
@@ -430,7 +448,7 @@ def optimizeMultiDim(options,args):
     print "\n---------------------------------------------"
     print "Reading inputs"
     print
-    sigTrees = [ mergeTrees(fin,selection,name,trees,aliases) for name,trees in siglist ]
+    sigTrees = [ mergeTrees(sin,selection,name,trees,aliases) for name,trees in siglist ]
     bkgTrees = [ mergeTrees(fin,selection,name,trees,aliases) for name,trees in bkglist ]
 
     for tree in sigTrees+bkgTrees:
@@ -441,6 +459,8 @@ def optimizeMultiDim(options,args):
         tree.SetAlias("_weight",weight)
         tree.Write()
         
+    if sin != fin:
+        sin.Close()
     fin.Close()
     if options.onlytrees:
         sys.exit(0)
@@ -777,6 +797,11 @@ if __name__ == "__main__":
     parser = OptionParser(option_list=[
             make_option("-i", "--infile",
                         action="store", type="string", dest="infile",
+                        default="",
+                        help="input file",
+                        ),
+            make_option("--sigfile",
+                        action="store", type="string", dest="sigfile",
                         default="",
                         help="input file",
                         ),

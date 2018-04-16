@@ -1,0 +1,83 @@
+{ 
+    "#" : "This is a JSON file to configure categoryOptimizationMultiDim.py script",
+        "#" : "Comments are not supported in JSON.",
+        "#" : "The trick here is to encapsulate them as well formatted input with key #",
+        "#" : "Configuration items are commented prepending an # to the name (any other character would work)",
+        
+        "###" : "----------------------------------------------------------------------------------------------",
+        "observable"          : ["Mgg",[100,180,0.25],125],
+        "settings"            : [["floatLast",[0]],["floatFirst",[0]],["setScan",[20,1,1]]],
+	"#settings"           : [],
+        
+        "###" : "----------------------------------------------------------------------------------------------",
+        "##" : "Define extra variables",
+	"##" : "The MVA and MX cut, obtained by previous optimization step, have to be written by hand in this config file. This file works for 9 categories",
+        "aliases"             : ["MXcap := MX*(MX<800) + 800*(MX>=800)",
+				 "minusMXcap := -MXcap",
+				 "DeltaMjj := abs(Mjj-125.)",
+				 "minusDeltaMjjcap := -(DeltaMjj*(DeltaMjj<200) + 200*(DeltaMjj>=200))",
+				 "deltaMjjMin := (Mjj-125)",
+				 "minusDeltaMjjMax := -(Mjj-125)",
+				 "MXbin0  := MX>=250 && MX<378",
+				 "MXbin1  := MX>=378 && MX<540",
+				 "MXbin2  := MX>=540",
+				 "MVAcat0 := MVAOutputTransformed >= 0.769",
+				 "MVAcat1 := MVAOutputTransformed <  0.769 && MVAOutputTransformed >= 0.535",
+				 "MVAcat2 := MVAOutputTransformed <  0.535 && MVAOutputTransformed >= 0.290",
+				 "cat0 := MXbin0 * MVAcat0",
+				 "cat1 := MXbin1 * MVAcat0",
+				 "cat2 := MXbin2 * MVAcat0",
+				 "cat3 := MXbin0 * MVAcat1",
+				 "cat4 := MXbin1 * MVAcat1",
+				 "cat5 := MXbin2 * MVAcat1",
+				 "cat6 := MXbin0 * MVAcat2",
+				 "cat7 := MXbin1 * MVAcat2",
+				 "cat8 := MXbin2 * MVAcat2"
+				 ],
+        
+        "###" : "----------------------------------------------------------------------------------------------",
+        "###" : "Simultaneous minimization: sigmaM/M categories with IDMVA.",
+        "###" : "----------------------------------------------------------------------------------------------",
+        "variables"           : [["MVAOutputTransformed", [0.0,1.01,0.505],0.5]
+                                 ],
+        "range"               : [1],
+	
+	"selection"           : "1",
+
+	"selectioncuts"      : [["minusDeltaMjjMax",[-70,70.0,2.5],-30],
+				["deltaMjjMin",[-70,70.0,2.5],-30]
+                                ],
+	
+
+        "###" : "----------------------------------------------------------------------------------------------",
+        "###" : "Signal and background processes",
+        "###" : "----------------------------------------------------------------------------------------------",
+        "signals"             : {
+        "signal"               : [
+				  ["reducedTree","1"]
+				  ]
+            },
+        
+        "backgrounds"        : { 
+	    "non_res"             : [["reducedTree_bkg_0","1"]
+				     ]
+
+
+            },
+	    "#backgrounds"   : { 
+	     "res"                 : [["reducedTree","1"]
+					 ]	
+		    },
+	    "shapes"              : { "res" : "gaus" },
+
+        "weights"             : { "signal" : "2.*weight", "non_res" : "weight", "res" : "weight"  },
+        "##" : "'Ultraviolet' cutoff in number of events",
+	"minevents"           : { "non_res" : 1.75  },
+        
+        "###" : "----------------------------------------------------------------------------------------------",
+        "##" : "When loading previous steps only look at ncat in [2:5]",
+        "mincat"              : 3,
+        "maxcat"              : 3,
+        "#" : "No direct cutoff on categorization variable (see below for minevents)",
+        "cutoff"              : 0.0
+}
