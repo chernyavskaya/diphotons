@@ -6,7 +6,7 @@
         
         "###" : "----------------------------------------------------------------------------------------------",
         "observable"          : ["Mgg",[100,180,0.25],125],
-        "settings"            : [["floatLast",[1]],["setScan",[20,1,1]]],
+        "settings"            : [["floatLast",[1]],["setScan",[15,1,1]]],
 	"#settings"           : [],
         
         "###" : "----------------------------------------------------------------------------------------------",
@@ -20,7 +20,7 @@
 				 ],
 
 	"#selection"           : "1",
-	"selection"          : "Mjj > 95 && Mjj < 150 && MX>250",
+	"selection"          : "Mjj > 90 && Mjj < 150 && MX>250",
 	"selectioncuts"       : [],
         "subcategories"       : [],
 
@@ -49,7 +49,10 @@
             },
         
         "backgrounds"        : { 
-	    "non_res"             : [["reducedTree_bkg_0","1"]
+	    "non_res"             : [["reducedTree_bkg_0","1"],
+	    			    ["reducedTree_bkg_2","1"],
+	    			    ["reducedTree_bkg_3","1"],
+	    			    ["reducedTree_bkg_4","1"]
 				     ]
 
 
@@ -61,9 +64,9 @@
 
 	"shapes"              : { "res" : "gaus" },
 
-        "weights"             : { "signal" : "2.*weight", "non_res" : "weight", "res" : "weight"  },
+        "weights"             : { "signal" : "35.9*2*weight", "non_res" : "35.9*weight", "res" : "35.9*weight"  },
         "##" : "'Ultraviolet' cutoff in number of events",
-	    "minevents"           : { "non_res" : 10},
+	    "minevents"           : { "non_res" : 4, "signals":1},
         
         "###" : "----------------------------------------------------------------------------------------------",
         "##" : "When loading previous steps only look at ncat in [2:5]",

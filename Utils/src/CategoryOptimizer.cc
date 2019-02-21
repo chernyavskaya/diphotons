@@ -269,6 +269,7 @@ double CategoryOptimizer::optimizeNCat( int ncat, const double *cutoffs, bool dr
             bestFit.push_back( first );
         }
         if( ! floatFirst_ ) {
+            std::cout<<bestFit.back()<<"----bestFit.back()"<<std::endl;
             minimizer_->SetFixedVariable( bestFit.size() - 1, Form( "%sBound%d", dimname.Data(), 0 ),
                                           bestFit.back() );
         } else {
@@ -401,12 +402,15 @@ double CategoryOptimizer::optimizeNCat( int ncat, const double *cutoffs, bool dr
             for( int ii = paramsToScan.size() - 1; ii >= 0; --ii ) {
                 int ipar = paramsToScan[ii].first;
                 std::pair<double, double> rng = paramsToScan[ii].second;
-                /// std::cout << ipar << " " << rng.first << " " << rng.second << std::endl;
+                // std::cout << ipar << " " << rng.first << " " << rng.second << std::endl;
+                //                minimizer_->Scan( ipar, nstep, &x[0], &y[0], rng.first, rng.second );
                 minimizer_->Scan( ipar, nstep, &x[0], &y[0], rng.first, rng.second );
                 /// std::copy( &x[0], &x[nstep-1], std::ostream_iterator<double>(std::cout, ",") );
                 /// std::cout << std::endl;
                 /// std::copy( &y[0], &y[nstep-1], std::ostream_iterator<double>(std::cout, ",") );
                 /// std::cout << std::endl;
+
+                
                 minimizer_->PrintResults();
                 TCanvas canv;
                 double *xset = &x[0];
@@ -418,17 +422,31 @@ double CategoryOptimizer::optimizeNCat( int ncat, const double *cutoffs, bool dr
                     if( idim != parToDim.end() ) {
                         xp[jstep] = transformations_[idim->second]->eval( x[jstep] );
                     }
-                    if( y[jstep] >= 0 ) {
-                        int dir = jstep > nstep / 2 ? -1 : 1;
-                        int kstep = jstep + dir;
-                        while( kstep < ( int )nstep && kstep >= 0 ) {
-                            if( y[kstep] < 0 ) { break; }
-                            kstep += dir;
+                    ///for plotting only do that for MVA, understand better the meaning of this
+                    if(std::string(minimizer_->VariableName(ipar).c_str()).find("MX")==std::string::npos){
+                        if( y[jstep] >= 0 ) {
+                            int dir = jstep > nstep / 2 ? -1 : 1;
+                            int kstep = jstep + dir;
+                            while( kstep < ( int )nstep && kstep >= 0 ) {
+                                if( y[kstep] < 0 ) { break; }
+                                kstep += dir;
+                            }
+                            y[jstep] = y[kstep];
                         }
-                        y[jstep] = y[kstep];
                     }
                 }
-                TGraph gr( nstep, xset, &y[0] );
+                                float normY=1;
+                                normY=*std::max_element(y+1,y+nstep-2);//not sure why sometimes it is a minimum and sometimes a maximum
+                
+                
+                //normalize it
+                for( unsigned int jstep = 0; jstep < nstep; ++jstep ) {
+                                        if(abs(normY)>0.)y[jstep]=y[jstep]/normY;
+                                        if(normY<0.)y[jstep]=2-y[jstep];//to have it with maximum at 1
+                }
+
+                
+                TGraph gr( nstep-2, xset, &y[1] );
                 gr.Draw( "APL" );
                 gr.GetXaxis()->SetTitle( minimizer_->VariableName( ipar ).c_str() );
                 canv.SaveAs( Form( "scan_ncat%d_%s.png", ncat,  minimizer_->VariableName( ipar ).c_str() ) );
