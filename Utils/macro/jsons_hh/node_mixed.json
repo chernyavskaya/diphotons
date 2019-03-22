@@ -1,0 +1,13 @@
+{
+        "signals"             : {
+        "signal"               : [
+				  ["reducedTree_sig","1"]
+				  ],
+	"signal_nodes"        : [				  
+				  ["reducedTree_sig_node_3","1"],
+				  ["reducedTree_sig_node_4","1"],
+				  ["reducedTree_sig_node_9","1"]
+				 ]
+            },
+        "weights"             : { "signal" : "35.9*2*weight", "signal_nodes":"35.9*2*weight/12.0", "non_res" : "35.9*weight", "res" : "35.9*weight"  }
+}

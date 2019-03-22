@@ -559,10 +559,11 @@ double SimpleShapeFomProvider::operator()( std::vector<AbsModel *> sig, std::vec
     }
 
     /// double fom = 0.;
-    ///    cout << "AAAAAAAAAAAAA "<< sig.size() << endl;
-    ///    cout << "AAAAAAAAAAAAA "<< sig[0] << endl;
+    //    cout << "AAAAAAAAAAAAA "<< sig.size() << endl;
     size_t ncat = sig[0]->getNcat();
     size_t totcat = ncat * nSubcats_;
+    
+    //    std::cout<<"ncat:"<<ncat<<" subcat:"<<totcat<<std::endl;
 
     RooCategory roocat( "SimpleShapeFomCat", "" );
     std::vector<std::pair<std::string, RooAbsData *> >catData;

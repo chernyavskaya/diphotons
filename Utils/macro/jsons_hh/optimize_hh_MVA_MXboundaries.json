@@ -20,7 +20,7 @@
 				 ],
 
 	"#selection"           : "1",
-	"selection"          : "Mjj > 95 && Mjj < 150",
+	"selection"          : "Mjj > 60 && Mjj < 190",
 	"selectioncuts"       : [],
         "subcategories"       : [],
 
@@ -31,9 +31,10 @@
                                  ],
         "range"               : [3], "##" : "ncats to optimize",
         "#range"               : [2,3,4,5],
-	"subcategories"      : [ ["MXbin0","MX>=250 && MX<319"],
-				 ["MXbin1","MX>=319 && MX<438"],
-				 ["MXbin2","MX>=438"]
+	"subcategories"      : [["MXbin0","MX>=250 && MX<417"], 
+			        ["MXbin1","MX>=417 && MX<515"],
+				 ["MXbin2","MX>=515 && MX<622"],
+				 ["MXbin3","MX>=622"]
 				 ],
 	"#selectioncuts"      : [["minusDeltaMjjMax",[-70,70.0,5.0],-20],
 				["deltaMjjMin",[-70,70.0,5.0],-20]
@@ -49,9 +50,10 @@
             },
         
         "backgrounds"        : { 
-	    "non_res"             : [["reducedTree_bkg_0","1"]
+	    "non_res"             : [["reducedTree_bkg_0","1"],
+	    			    ["reducedTree_bkg_3","1"],
+	    			    ["reducedTree_bkg_4","1"]
 				     ]
-
 
             },
 	    "#backgrounds"   : { 
@@ -61,10 +63,9 @@
 
 	"shapes"              : { "res" : "gaus" },
 
-        "weights"             : { "signal" : "2.*weight", "non_res" : "weight", "res" : "weight"  },
+        "weights"             : { "signal" : "35.9*2*weight", "non_res" : "35.9*weight", "res" : "35.9*weight"  },
         "##" : "'Ultraviolet' cutoff in number of events",
-	    "minevents"           : { "non_res" : 1.5  },
-        
+	"minevents"           : { "non_res" : 1.5, "signals":0.1 },
         "###" : "----------------------------------------------------------------------------------------------",
         "##" : "When loading previous steps only look at ncat in [2:5]",
         "mincat"              : 3,

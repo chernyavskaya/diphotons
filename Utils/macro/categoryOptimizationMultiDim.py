@@ -552,14 +552,14 @@ def optimizeMultiDim(options,args):
     ## fom       = ROOT.SimpleShapeFomProvider(nsubcats)
     
     ## Configurable from command line
-    ### if not options.fom.endswith(")"):
-    ###     optimization.fom += "()"
-    ### fomBooking = """int nsubcats = %d;
-    ###              AbsFomProvider * fom = new %s;
-    ### """ % ( nsubcats, options.fom)
-    ### print fomBooking
-    ### ROOT.gROOT.ProcessLine(fomBooking)
-    ### fom = ROOT.fom
+#    if not options.fom.endswith(")"):
+#        optimization.fom += "()"
+#    fomBooking = """int nsubcats = %d;
+#                  AbsFomProvider * fom = new %s;
+#     """ % ( nsubcats, options.fom)
+#    print fomBooking
+#    ROOT.gROOT.ProcessLine(fomBooking)
+#    fom = ROOT.fom
     fom = ROOT.SimpleShapeFomProvider(nsubcats)
     for sigModel in signals:
         model = sigModel.getModel()
