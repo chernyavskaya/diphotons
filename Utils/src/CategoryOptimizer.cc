@@ -393,21 +393,41 @@ double CategoryOptimizer::optimizeNCat( int ncat, const double *cutoffs, bool dr
 
     /// std::vector<double> x(scan_), y(+1);
     double x[100], y[100], xp[100];
-    if( scan_ > 0 ) {
+      // Call to the minimization
+    std::cout << "Calling minimization (strategy: " << strategy_ << ")" << std::endl;
+    std::copy( bestFit.begin(), bestFit.end(), std::ostream_iterator<double>( std::cout, "," ) );
+    std::cout << std::endl;
+    minimizer_->SetStrategy( strategy_ );
+    minimizer_->PrintResults();
+    minimizer_->SetStrategy( strategy_ );
+    if( ! dryrun ) {
+        minimizer_->Minimize();
+        const double *x = minimizer_->X();
+        std::copy( x, x + minimizer_->NDim(), bestFit.begin() );
+        std::copy( x, x + minimizer_->NDim(), std::ostream_iterator<double>( std::cout, "," ) );
+        std::cout << std::endl;
+        best = minimizer_->MinValue();
+        minimizer_->PrintResults();
+    } else {
+        best = theFom.DoEval( &bestFit[0] );
+    }
+
+   if( scan_ > 0 ) {
         for( int irep = 0; irep < repeat_; ++irep ) {
-            std::cout << "Scanning parameters " << std::endl;
+            std::cout << "Scanning around the minimum " << std::endl;
             minimizer_->PrintResults();
             unsigned int nstep = scan_;
             for( int ii = paramsToScan.size() - 1; ii >= 0; --ii ) {
                 int ipar = paramsToScan[ii].first;
                 std::pair<double, double> rng = paramsToScan[ii].second;
-                /// std::cout << ipar << " " << rng.first << " " << rng.second << std::endl;
+              ///  std::cout << ipar << " " << rng.first << " " << rng.second << std::endl;
                 minimizer_->Scan( ipar, nstep, &x[0], &y[0], rng.first, rng.second );
-                /// std::copy( &x[0], &x[nstep-1], std::ostream_iterator<double>(std::cout, ",") );
-                /// std::cout << std::endl;
-                /// std::copy( &y[0], &y[nstep-1], std::ostream_iterator<double>(std::cout, ",") );
-                /// std::cout << std::endl;
+             ///   std::copy( &x[0], &x[nstep-1], std::ostream_iterator<double>(std::cout, ",") );
+             ///   std::cout << std::endl;
+             ///   std::copy( &y[0], &y[nstep-1], std::ostream_iterator<double>(std::cout, ",") );
+            ///    std::cout << std::endl;
                 minimizer_->PrintResults();
+           ///     best = minimizer_->MinValue();
                 TCanvas canv;
                 double *xset = &x[0];
                 std::map<int, int>::iterator idim = parToDim.find( ipar );
@@ -437,24 +457,7 @@ double CategoryOptimizer::optimizeNCat( int ncat, const double *cutoffs, bool dr
         }
     }
 
-    // Call to the minimization
-    std::cout << "Calling minimization (strategy: " << strategy_ << ")" << std::endl;
-    std::copy( bestFit.begin(), bestFit.end(), std::ostream_iterator<double>( std::cout, "," ) );
-    std::cout << std::endl;
-    minimizer_->SetStrategy( strategy_ );
-    minimizer_->PrintResults();
-    minimizer_->SetStrategy( strategy_ );
-    if( ! dryrun ) {
-        minimizer_->Minimize();
-        const double *x = minimizer_->X();
-        std::copy( x, x + minimizer_->NDim(), bestFit.begin() );
-        std::copy( x, x + minimizer_->NDim(), std::ostream_iterator<double>( std::cout, "," ) );
-        std::cout << std::endl;
-        best = minimizer_->MinValue();
-        minimizer_->PrintResults();
-    } else {
-        best = theFom.DoEval( &bestFit[0] );
-    }
+
 
     std::copy( bestFit.begin(), bestFit.end(), std::ostream_iterator<double>( std::cout, "," ) );
     std::cout << std::endl;
