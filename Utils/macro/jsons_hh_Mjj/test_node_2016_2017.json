@@ -1,0 +1,20 @@
+{
+        "signals"             : {
+        "signal_2016"               : [
+				  ["reducedTree_sig","1"]
+				  ],
+        "signal_2017"               : [
+				  ["reducedTree_sig_2017","1"]
+				  ]
+            },
+        "backgrounds"        : { 
+	    "bkg_2016"             : [["reducedTree_bkg_0","1"],
+	    			    ["reducedTree_bkg_1","1"],
+	    			    ["reducedTree_bkg_2","1"]],
+	    "bkg_2017"             : [["reducedTree_bkg_0_2017","1"]]
+            },
+        "#weights"             : { "signal_2016" : "35.9*2*weight","bkg_2016" : "35.9*weight*overlapSave" },
+        "weights"             : { "signal_2016" : "35.9*2*weight/10.","bkg_2016" : "35.9*weight*overlapSave/10.","signal_2017" : "41.5*2*weight/10.","bkg_2017" : "41.5*weight/10."  },
+	    "minevents"           : { "backgrounds" : 4.0, "signals":1},
+	    "#minevents"           : { "backgrounds" : 1.0}
+}
