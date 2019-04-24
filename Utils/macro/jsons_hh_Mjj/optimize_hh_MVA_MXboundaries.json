@@ -31,10 +31,10 @@
                                  ],
         "range"               : [3], "##" : "ncats to optimize",
         "#range"               : [2,3,4,5],
-	"subcategories"      : [["MXbin0","MX>=250 && MX<336"], 
-			        ["MXbin1","MX>=336 && MX<411"],
-				 ["MXbin2","MX>=411. && MX<556."],
-				 ["MXbin3","MX>=556"]
+	"subcategories"      : [["MXbin0","MX>=250 && MX<349"], 
+			        ["MXbin1","MX>=349 && MX<432"],
+				 ["MXbin2","MX>=432. && MX<539."],
+				 ["MXbin3","MX>=539"]
 				 ],
 	"#selectioncuts"      : [["minusDeltaMjjMax",[-70,70.0,5.0],-20],
 				["deltaMjjMin",[-70,70.0,5.0],-20]

@@ -3,7 +3,8 @@
 ## _mjj_nodr
 
 #infile="/mnt/t3nfs01/data01/shome/micheli/HHbbgg_ETH_devel/outfiles/20170828_optimizedCuts_noDR_minDRGJet/Total_preselection_diffNaming_transformedMVA.root"
-infile="/work/nchernya/HHbbgg_ETH_devel/outfiles/20190321_2017_2016_for_optimization/Total_preselection_diffNaming_2016_2017_21_03_2019_transformedMVA.root"
+#infile="/work/nchernya/HHbbgg_ETH_devel/outfiles/20190321_2017_2016_for_optimization/Total_preselection_diffNaming_2016_2017_21_03_2019_transformedMVA.root"
+infile="/work/nchernya/HHbbgg_ETH_devel/outfiles/20190321_2016_2017_smallBDT_opt_foroptimization/Total_preselection_diffNaming_2016_2017_05_04_2019_transformedMVA.root"
 #infile="/t3home/micheli/HHbbgg_ETH_20190128/HHbbgg_ETH/Training/output_files/20190128_test/Total_preselection_diffNaming_transformedMVA.root"
 #infile="/t3home/micheli/HHbbgg_ETH_20190128/HHbbgg_ETH/Training/output_files/20190201_optimized/Total_preselection_diffNaming_transformedMVA.root"
 
@@ -26,7 +27,7 @@ echo "--------------------------------------------------------------------------
 
 #######################################hh version
 ## MVA boundaries optimization with fixed cut in MX and Mjj
-#    ./categoryOptimizationMultiDim.py --load jsons_hh_Mjj/optimize_hh_MVA.json --load $node --infile ${infile} --sigfile ${infile}  --label mixNodes -o outPlots/out_${now}_${name}_transformed_MVA/
+   # ./categoryOptimizationMultiDim.py --load jsons_hh_Mjj/optimize_hh_MVA.json --load $node --infile ${infile} --sigfile ${infile}  --label mixNodes -o outPlots/out_${now}_${name}_transformed_MVA/
 
 ## MX boundaries optimization with optimized MVA boundaries and fixed cut in Mjj
 #    ./categoryOptimizationMultiDim.py --load jsons_hh_Mjj/optimize_hh_MX.json --load $node --infile ${infile} --sigfile ${infile}  --label mixNodes -o outPlots/out_${now}_${name}_transformed_MX/

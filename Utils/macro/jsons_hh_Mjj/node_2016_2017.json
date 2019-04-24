@@ -7,8 +7,6 @@
             },
         "backgrounds"        : { 
 	    "bkg_2016"             : [["reducedTree_bkg_0","1"],
-	    			    ["reducedTree_bkg_1","1"],
-	    			    ["reducedTree_bkg_2","1"],
 	    			    ["reducedTree_bkg_0_2017","1"]]
             },
         "#weights"             : { "signal_2016" : "35.9*2*weight","bkg_2016" : "35.9*weight*overlapSave" },

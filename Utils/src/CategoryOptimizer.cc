@@ -442,6 +442,13 @@ double CategoryOptimizer::optimizeNCat( int ncat, const double *cutoffs, bool dr
                     if( idim != parToDim.end() ) {
                         xp[jstep] = transformations_[idim->second]->eval( x[jstep] );
                     }
+                    if( y[jstep] >= 0 ) {
+                        int dir = jstep > nstep / 2 ? -1 : 1;
+                        int kstep = jstep + dir;
+                        while( kstep < ( int )nstep && kstep >= 0 ) {
+                            if( y[kstep] < 0 ) { break; }
+                            kstep += dir;
+/*
                     ///for plotting only do that for MVA, understand better the meaning of this
                     if(std::string(minimizer_->VariableName(ipar).c_str()).find("MX")==std::string::npos){
                         if( y[jstep] >= 0 ) {
@@ -452,10 +459,15 @@ double CategoryOptimizer::optimizeNCat( int ncat, const double *cutoffs, bool dr
                                 kstep += dir;
                             }
                             y[jstep] = y[kstep];
+*/
                         }
+                        y[jstep] = y[kstep];
+
                     }
                 }
-                                float normY=1;
+                TGraph gr( nstep, xset, &y[0] );
+
+        /*                        float normY=1;
                                 normY=*std::max_element(y+1,y+nstep-2);//not sure why sometimes it is a minimum and sometimes a maximum
                 
                 
@@ -466,7 +478,7 @@ double CategoryOptimizer::optimizeNCat( int ncat, const double *cutoffs, bool dr
                 }
 
                 
-                TGraph gr( nstep-2, xset, &y[1] );
+                TGraph gr( nstep-2, xset, &y[1] );*/
                 gr.Draw( "APL" );
                 gr.GetXaxis()->SetTitle( minimizer_->VariableName( ipar ).c_str() );
                 canv.SaveAs( Form( "scan_ncat%d_%s.png", ncat,  minimizer_->VariableName( ipar ).c_str() ) );

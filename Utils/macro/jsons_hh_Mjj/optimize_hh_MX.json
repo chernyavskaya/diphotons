@@ -6,12 +6,12 @@
         
         "###" : "----------------------------------------------------------------------------------------------",
         "observable"          : ["Mgg",[100,180,0.25],125],
-        "settings"            : [["floatLast",[1]],["setScan",[15,1,1]]],
+        "settings"            : [["floatLast",[1]],["setScan",[20,1,1]]],
 	"#settings"           : [],
         
         "###" : "----------------------------------------------------------------------------------------------",
         "##" : "Define extra variables",
-        "aliases"             : ["MXcap := MX*(MX<800) + 800*(MX>=800)",
+        "aliases"             : ["MXcap := MX*(MX<700) + 700*(MX>=700)",
 				 "minusMXcap := -MXcap",
 				 "DeltaMjj := abs(Mjj-125.)",
 				 "minusDeltaMjjcap := -(DeltaMjj*(DeltaMjj<200) + 200*(DeltaMjj>=200))",
@@ -28,13 +28,14 @@
 	"##" : "--------------------------------------------------------------",
 	"##" : "MX bins",
 	"##" : "--------------------------------------------------------------",
-        "variables"           : [["MXcap", [250,800.0,4.0],350.0]
+        "variables"           : [["MXcap", [250,700.0,4.0],420.0]
                                  ],
         "range"               : [4], "##" : "ncats to optimize",
         "#range"               : [2,3,4],
-	"subcategories"      : [ ["cat0","MVAOutputTransformed >= 0.744"],
-				  ["cat1","MVAOutputTransformed <  0.744 && MVAOutputTransformed >= 0.473" ],
-				  ["cat2","MVAOutputTransformed <  0.473 && MVAOutputTransformed >= 0.246" ]
+	"#subcategories"      : [],
+	"subcategories"      : [ ["cat0","MVAOutputTransformed >= 0.805"],
+				  ["cat1","MVAOutputTransformed <  0.805 && MVAOutputTransformed >= 0.553" ],
+				  ["cat2","MVAOutputTransformed <  0.553 && MVAOutputTransformed >= 0.275" ]
 				 ],
         "###" : "----------------------------------------------------------------------------------------------",
         "###" : "Signal and background processes",
@@ -63,7 +64,7 @@
         "#weights"             : { "signal" : "2.*weight", "non_res" : "weight", "res" : "weight"  },
         "weights"             : { "signal" : "35.9*2.*weight", "non_res" : "35.9*weight", "res" : "35.9*weight" },
         "##" : "'Ultraviolet' cutoff in number of events",
-	    "minevents"           : { "non_res" : 1.5 ,"signals":0.2},
+	    "minevents"           : { "non_res" : 5.0 ,"signals" : 2.0},
         "###" : "----------------------------------------------------------------------------------------------",
         "##" : "When loading previous steps only look at ncat in [2:5]",
         "mincat"              : 4,
