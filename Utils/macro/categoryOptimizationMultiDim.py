@@ -296,6 +296,7 @@ def optimizeMultiDim(options,args):
     observable = options.observable
     selection = options.selection
     cutoff = options.cutoff
+    print 'cutoff is ', cutoff
 
     selectioncuts = options.selectioncuts
     
@@ -456,6 +457,7 @@ def optimizeMultiDim(options,args):
         weight = "weight"
         if name in weights:
             weight = weights[name]
+            print "Assigned to the tree weights : ",weight
         tree.SetAlias("_weight",weight)
         tree.Write()
         

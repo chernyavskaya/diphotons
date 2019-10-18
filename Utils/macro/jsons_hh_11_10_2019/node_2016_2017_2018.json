@@ -1,0 +1,11 @@
+{
+        "signals"             : {
+        "signal_all"               : [
+				  ["reducedTree_sig","1"]]
+            },
+        "backgrounds"        : { 
+	    "bkg_all"             : [["reducedTree","1"]]
+            },
+        "weights"             : { "signal_all" : "137.2/3.*0.56*weight*eventTrainedOn","bkg_all" : "137.2*weight*overlapSave" },
+	    "minevents"           : { "backgrounds" : 4, "signals":0.001}
+}
