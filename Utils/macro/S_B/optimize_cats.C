@@ -26,29 +26,29 @@ int main(int argc, char* argv[]){
 
 	TString path="/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/20191008/";
 	
-	const int NCAT=4;
+	const int NCAT=2;
 
 /*	TString what_to_opt = "MVAOutputTransformed";
 	double xmin = 0.;
 	double xmax = 1.;
 	Double_t precision=0.01;  //0.01 for MVA, 5 for MX
 */
-
+/*
 	TString what_to_opt = "MX";
 	double xmin = 250;
 	double xmax = 800;
 	Double_t precision=5;  //0.01 for MVA, 5 for MX
+*/
 
-/*
 	TString what_to_opt = "ttHScore";
 	double xmin = 0.;
 	double xmax = 1.;
-	Double_t precision=0.01;  
-*/
+	Double_t precision=0.02;  
 
 
-//	TString Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
-	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
+
+	TString Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
+//	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
 	TString Mgg_sideband = "*((Mgg<=115)||(Mgg>=135))";
 	TString selection_sig = "weight*lumi*eventTrainedOn*0.587";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box
 	TString selection_bg = "weight*lumi*overlapSave";
@@ -58,16 +58,17 @@ int main(int argc, char* argv[]){
 	TString outstr = "";
 	double minevents = 60; //
 */
-	TString subcategory = "*((MVAOutputTransformed>0.29)&&(MVAOutputTransformed<.51))";
+/*	TString subcategory = "*((MVAOutputTransformed>0.29)&&(MVAOutputTransformed<.51))";
 	TString outstr = "_MVA2";
 	double minevents = 8; //
-
-//borders of categories : 0	0.29	0.51	0.68	1
-/*
-	TString subcategory = "*((MVAOutputTransformed>0.51)&&(MVAOutputTransformed<.68))";
-	TString outstr = "_MVA1";
-	double minevents = 40; 
 */
+//borders of categories : 0	0.29	0.51	0.68	1
+
+//	TString subcategory = "*((MVAOutputTransformed>0.68)&&(MVAOutputTransformed<1.))";
+	TString subcategory = "*((MVAOutputTransformed>0.29)&&(MVAOutputTransformed<1.))";
+	TString outstr = "_MVA012";
+	double minevents = 40; 
+
 
 	selection_sig += subcategory;
 	selection_bg += subcategory;
@@ -106,21 +107,25 @@ int main(int argc, char* argv[]){
 	tree_bg_tth->Draw(s,sel,"goff");
 
 	
-//	hist_B->Add(hist_B_cut_tth);
 
 	double END = hist_B->GetBinCenter(hist_B->FindLastBinAbove(0.))+hist_B->GetBinWidth(1)/2.; //right end of BDT distibution
 	double START = hist_B->GetBinCenter(hist_B->FindFirstBinAbove(0.))-hist_B->GetBinWidth(1)/2.; //right end of BDT distibution
 	cout<<"start = "<<START<<" , end = "<<END<<endl;
 
 
+	hist_S->SetFillStyle(4050);
 	hist_S->SetLineColor(kRed);
 	hist_S->SetFillColor(kRed-7);
 	hist_S->SetLineWidth(2);
+	hist_B->SetFillStyle(4050);
 	hist_B->SetLineColor(kBlue+1);
 	hist_B->SetFillColor(kBlue-10);
 	hist_B->SetLineWidth(2);
+//	hist_B_cut_tth->SetFillStyle(4050);
+	hist_B_cut_tth->SetLineColor(kGreen+1);
+//	hist_B_cut_tth->SetFillColor(kGreen-6);
+	hist_B_cut_tth->SetLineWidth(2);
 	TH1F *hist_B2 = (TH1F*)hist_B->Clone("b_new");
-//	hist_B2->Add(hist_B_cut_tth);	hist_B2->Rebin(1); //4
 	hist_B2->Rebin(1); //4
 	TH1F *hist_S2 = (TH1F*)hist_S->Clone("s_new");
 	hist_S2->Rebin(1); //4
@@ -215,6 +220,7 @@ double bkg_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 double max_final_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 double max_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 
+	hist_B->Add(hist_B_cut_tth);
 	do {
 		max_n[0]=0;
 		sig_n[0] = hist_S->Integral(1,hist_S->FindBin(start_n[0])-1);
@@ -281,12 +287,12 @@ double max_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 
 					double max_sum = 0;
 					int minevt_cond = 0; //condition is false
-					for (int index=0;index<NCAT;index++){
+					for (int index=1;index<NCAT;index++){
 						max_sum+=max_n[index];
 						minevt_cond_n[index] = (bkg_sideband_n[index]>minevents);
 					}
-					minevt_cond = std::accumulate(minevt_cond_n, minevt_cond_n + NCAT, 0);
-					if (((max_sum)>=max) && (minevt_cond==(NCAT))) {
+					minevt_cond = std::accumulate(minevt_cond_n+1, minevt_cond_n + NCAT, 0);
+					if (((max_sum)>=max) && (minevt_cond==(NCAT-1))) {
 						max = max_sum;
 						for (int index=0;index<NCAT;index++){
 							borders[index+1] = start_n[index]; //first and last are START and END 
@@ -310,12 +316,11 @@ double max_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 
 	
 	ofstream out;
-	out<<endl;
 	out.open(s.Format("output_txt/%s/%s.txt",date.Data(),outname.Data()));
 	out<<"subcategory : "<<subcategory<<endl;
 	out<<"S2/B over all bins, sqrt : "<<max_all<<"  , "<<sqrt(max_all)<<endl;
 	out<<endl;
-	out<<"sqrt(S**2/B) total over the chosen categories : "<<max_total<<"  ,S/sqrt(B) =  "<<sqrt(max_total)<<endl;
+	out<<"S**2/B total over the chosen categories : "<<max_total<<"  ,S/sqrt(B) =  "<<sqrt(max_total)<<endl;
 	out<<endl;
 	out<<"borders of categories : ";
 	for (int index=0;index<NCAT+1;index++)
@@ -381,6 +386,7 @@ double max_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 
 	hist_B2->Draw("HISTsame");
 	hist_S2->Draw("HISTsame");
+	hist_B_cut_tth->Draw("HISTsame");
 
 	gPad->Update();
 	pCMS1.Draw("same");

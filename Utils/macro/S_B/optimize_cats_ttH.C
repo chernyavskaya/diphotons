@@ -46,14 +46,16 @@ int main(int argc, char* argv[]){
 */
 
 
-	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
+//	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
+	TString Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
 	TString Mgg_sideband = "*((Mgg<=115)||(Mgg>=135))";
-	TString selection_sig = "weight*137.2*eventTrainedOn*0.587";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box
-	TString selection_bg = "weight*137.2*overlapSave";
+	TString selection_sig = "weight*lumi*eventTrainedOn*0.587";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box
+	TString selection_bg = "weight*lumi*overlapSave";
+	TString selection_diphoton = "*1.5"; //SF needed to match data normalization
 
 	TString subcategory = "";
 	TString outstr = "";
-	double minevents = 40; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX
+	double minevents = 50; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX
 
 //borders of categories : 0.0025	0.2925	0.5125	0.6725	0.9975
 //borders of categories : 0.0025	0.3125	0.5725	0.6925	0.9975
@@ -72,31 +74,30 @@ int main(int argc, char* argv[]){
 	selection_bg += subcategory;
 
 
-	TString date = "21_10_2019_v2";
+	TString date = "22_10_2019";
 	TString s; TString sel; 
 	TString outname = s.Format("output_SB_%s_cat%d_minevents%.0f_%s",what_to_opt.Data(),NCAT,minevents,outstr.Data());
 
 
-//	TFile *file_s =  TFile::Open(path+"Total_runII_sig_mix.root");
-	TFile *file_s =  TFile::Open(path+"GluGluToHHTo2B2G_node_SM_runII_preselection_diffNaming_transformedMVA.root");
+	TFile *file_s =  TFile::Open(path+"Total_sig_bkg_tth.root");
 	TTree *tree_sig = (TTree*)file_s->Get("reducedTree_sig");
 	TH1F *hist_S = new TH1F("hist_S","hist_S",int((xmax-xmin)/precision),xmin,xmax);
    s.Form("%s>>hist_S",what_to_opt.Data());
    sel.Form("%s",(selection_sig+Mgg_window).Data());
 	tree_sig->Draw(s,sel,"goff");
 
-	TFile *file_bg =  TFile::Open(path+"Total_runII_sig_mix_bkg_and_ttH.root");
+	TFile *file_bg =  TFile::Open(path+"Total_sig_bkg_tth.root");
 	TTree *tree_bg = (TTree*)file_bg->Get("reducedTree");
 	TTree *tree_bg_ttH = (TTree*)file_bg->Get("reducedTree_bkg_0");
 
 	TH1F *hist_B = new TH1F("hist_B","hist_B",int((xmax-xmin)/precision),xmin,xmax); //200 bins
    s.Form("%s>>hist_B",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+Mgg_window).Data());
+   sel.Form("%s",(selection_bg+selection_diphoton+Mgg_window).Data());
 	tree_bg->Draw(s,sel,"goff");
 
 	TH1F *hist_B_sideband = new TH1F("hist_B_sideband","hist_B_sideband",int((xmax-xmin)/precision),xmin,xmax); //200 bins
    s.Form("%s>>hist_B_sideband",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+Mgg_sideband).Data());
+   sel.Form("%s",(selection_bg+selection_diphoton+Mgg_sideband).Data());
 	tree_bg->Draw(s,sel,"goff");
 
 	TH1F *hist_B_ttH = new TH1F("hist_B_ttH","hist_B_ttH",int((xmax-xmin)/precision),xmin,xmax); //200 bins
@@ -117,10 +118,12 @@ int main(int argc, char* argv[]){
 	hist_B->SetLineColor(kBlue+1);
 	hist_B->SetFillColor(kBlue-10);
 	hist_B->SetLineWidth(2);
+	hist_B_ttH->SetLineColor(kGreen+1);
+	hist_B_ttH->SetLineWidth(2);
 	TH1F *hist_B2 = (TH1F*)hist_B->Clone("b_new");
-	hist_B2->Rebin(4);
+	hist_B2->Rebin(1);
 	TH1F *hist_S2 = (TH1F*)hist_S->Clone("s_new");
-	hist_S2->Rebin(4);
+	hist_S2->Rebin(1);
 //	hist_S2->Scale();
 
 
@@ -235,12 +238,12 @@ for (int index=0;index<NCAT;index++)
 
 	TH1F *hist_B_cut = new TH1F("hist_B_cut","hist_B_cut",int((xmax-xmin)/precision),xmin,xmax); //200 bins
    s.Form("%s>>hist_B_cut",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
+   sel.Form("%s",(selection_bg+selection_diphoton+Mgg_window+tth_cut_s).Data());
 	tree_bg->Draw(s,sel,"goff");
 
 	TH1F *hist_B_cut_sideband = new TH1F("hist_B_cut_sideband","hist_B_cut_sideband",int((xmax-xmin)/precision),xmin,xmax); //200 bins
    s.Form("%s>>hist_B_cut_sideband",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+Mgg_sideband+tth_cut_s).Data());
+   sel.Form("%s",(selection_bg+selection_diphoton+Mgg_sideband+tth_cut_s).Data());
 	tree_bg->Draw(s,sel,"goff");
 
 	TH1F *hist_B_cut_tth = new TH1F("hist_B_cut_tth","hist_B_cut_tth",int((xmax-xmin)/precision),xmin,xmax); //200 bins
@@ -349,7 +352,7 @@ for (int index=0;index<NCAT;index++)
 		start_n[0]+=precision;
 	} while (start_n[0]<=(END-(NCAT-1)*precision));
 	tth_cut+=0.02;
-} while (tth_cut<0.7);
+} while (tth_cut<0.4);
 
 	borders[NCAT] = END;
 
@@ -429,6 +432,7 @@ for (int index=0;index<NCAT;index++)
 
 	hist_B2->Draw("HISTsame");
 	hist_S2->Draw("HISTsame");
+	hist_B_ttH->Draw("HISTsame");
 
 	gPad->Update();
 	pCMS1.Draw("same");
