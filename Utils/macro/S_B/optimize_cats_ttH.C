@@ -46,16 +46,16 @@ int main(int argc, char* argv[]){
 */
 
 
-//	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
-	TString Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
+	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
+//	TString Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
 	TString Mgg_sideband = "*((Mgg<=115)||(Mgg>=135))";
 	TString selection_sig = "weight*lumi*eventTrainedOn*0.587";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box
 	TString selection_bg = "weight*lumi*overlapSave";
 	TString selection_diphoton = "*1.5"; //SF needed to match data normalization
 
 	TString subcategory = "";
-	TString outstr = "";
-	double minevents = 50; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX
+	TString outstr = "tth_wide_window";
+	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX
 
 //borders of categories : 0.0025	0.2925	0.5125	0.6725	0.9975
 //borders of categories : 0.0025	0.3125	0.5725	0.6925	0.9975

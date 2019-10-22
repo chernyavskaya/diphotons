@@ -11,10 +11,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <vector>
 #include "TFile.h"
 #include "TROOT.h"
 #include "TLatex.h"
 #include "TLegend.h"
+#include "TGraph.h"
+#include <algorithm>    // std::min_element, std::max_element
 
 using namespace std;
 
@@ -65,9 +68,9 @@ int main(int argc, char* argv[]){
 //borders of categories : 0	0.29	0.51	0.68	1
 
 //	TString subcategory = "*((MVAOutputTransformed>0.68)&&(MVAOutputTransformed<1.))";
-	TString subcategory = "*((MVAOutputTransformed>0.29)&&(MVAOutputTransformed<1.))";
-	TString outstr = "_MVA012";
-	double minevents = 40; 
+	TString subcategory = "*((MVAOutputTransformed>0.70)&&(MVAOutputTransformed<1.))";
+	TString outstr = "_simultMVA0";
+	double minevents = 45; 
 
 
 	selection_sig += subcategory;
@@ -177,8 +180,9 @@ int main(int argc, char* argv[]){
 	leg->SetBorderSize(0);
 	leg->SetTextFont(42);
 	leg->SetTextSize(0.025);
-	leg->AddEntry(hist_S,"Sig (exp. exclusion)","F");
-	leg->AddEntry(hist_B,"BG","F");
+	leg->AddEntry(hist_S2,"Sig (exp. exclusion)","F");
+	leg->AddEntry(hist_B2,"BG","F");
+	leg->AddEntry(hist_B_cut_tth,"ttH","L");
 
 
 
@@ -220,7 +224,15 @@ double bkg_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 double max_final_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 double max_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 
-	hist_B->Add(hist_B_cut_tth);
+std::vector<double> categories_scans0;
+std::vector<double> categories_scans1;
+std::vector<double> categories_scans2;
+std::vector<double> categories_scans3;
+std::vector<double> significance_scans0;
+
+/////////////////////// Do you need ttH ???///////////////
+hist_B->Add(hist_B_cut_tth);
+//////////////////////////////////////////////////////////
 	do {
 		max_n[0]=0;
 		sig_n[0] = hist_S->Integral(1,hist_S->FindBin(start_n[0])-1);
@@ -230,6 +242,14 @@ double max_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 		if (bkg_n[0]!=0) max_n[0]=pow(sig_n[0],2)/bkg_n[0];
 	//	if (bkg_n[0]!=0) max_n[0]=pow(sig_n[1],2)/(bkg_n[0]+bkg_n_tth[0]);
 		start_n[1]=start_n[0]+precision;
+///////////////
+		bkg_sideband_n[1] = hist_B_sideband->Integral(hist_B_sideband->FindBin(start_n[0]),hist_B_sideband->GetNbinsX()+1);
+		if (bkg_n[1]!=0) max_n[1]=pow(sig_n[1],2)/bkg_n[1];
+		if (bkg_sideband_n[1]>minevents) {
+			categories_scans0.push_back(start_n[0]);	
+			significance_scans0.push_back(sqrt(max_n[1]));
+		}
+//////////////
 		do {
 			max_n[1]=0;
 			sig_n[1] = hist_S->Integral(hist_S->FindBin(start_n[0]),hist_S->FindBin(start_n[1])-1);
@@ -287,12 +307,12 @@ double max_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 
 					double max_sum = 0;
 					int minevt_cond = 0; //condition is false
-					for (int index=1;index<NCAT;index++){
+					for (int index=1;index<NCAT;index++){ //start from 1 for tth
 						max_sum+=max_n[index];
 						minevt_cond_n[index] = (bkg_sideband_n[index]>minevents);
 					}
-					minevt_cond = std::accumulate(minevt_cond_n+1, minevt_cond_n + NCAT, 0);
-					if (((max_sum)>=max) && (minevt_cond==(NCAT-1))) {
+					minevt_cond = std::accumulate(minevt_cond_n+1, minevt_cond_n + NCAT, 0); // +1 for tth
+					if (((max_sum)>=max) && (minevt_cond==(NCAT-1))) { //NCAT-1 for tth
 						max = max_sum;
 						for (int index=0;index<NCAT;index++){
 							borders[index+1] = start_n[index]; //first and last are START and END 
@@ -402,6 +422,36 @@ double max_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 	c1->Print(s.Format("plots/%s/%s.pdf",date.Data(),outname.Data()));
 
 
+
+	double* cat_scan = &categories_scans0[0];
+	double* sign_scan = &significance_scans0[0];
+	int counter = significance_scans0.size();
+	TGraph *gr =new TGraph(counter,cat_scan,sign_scan);
+	ymin = *std::max_element(sign_scan,sign_scan+counter) * 0.5;
+	ymax = *std::max_element(sign_scan,sign_scan+counter) * 1.1;
+	int max_pos = std::distance(sign_scan, std::max_element(sign_scan,sign_scan+counter));
+
+	TCanvas *c2 = new TCanvas("B","",800,800);
+	c2->cd();
+	TH1F *frame3 = new TH1F("frame3","",50,xmin,xmax);
+	frame3->GetXaxis()->SetNdivisions(505);
+   frame3->SetStats(0);
+	frame3->SetYTitle("S/#sqrt{B_{#gamma#gamma}+B_{ttH}}");
+//	frame3->SetYTitle("S/#sqrt{B}");
+	frame3->SetXTitle(s.Format("%s",what_to_opt.Data()));	
+	frame3->SetMinimum(ymin);
+	frame3->SetMaximum(ymax);
+	frame3->Draw();
+	gr->Draw("Psame");
+	gPad->Update();
+	pCMS1.Draw("same");
+	pCMS2.Draw("same");
+	pCMS12.Draw("same");
+	pave22.Draw("same");
+	pave33.Draw("same");
+	gPad->RedrawAxis();
+	c2->Print(s.Format("plots/%s/significance_%s.png",date.Data(),outname.Data()));
+	cout<<counter<<endl; 
 
 return 0;
 
