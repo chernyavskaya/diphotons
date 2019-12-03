@@ -28,29 +28,30 @@ int main(int argc, char* argv[]){
 	TString date = "20191126";
 	TString path=s.Format("/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/%s/",date.Data());
 	
-	const int NCAT=3; //for MVA
-	//const int NCAT=4;// for MX
+//	const int NCAT=2; //for tth killer
+	const int NCAT=4; //for MVA
+//	const int NCAT=4;// for MX
 
 	TString what_to_opt = "MVAOutputTransformed";
 	double xmin = 0.;
 	double xmax = 1.;
 	Double_t precision=0.01;  //0.01 for MVA, 5 for MX
-/*
-	TString what_to_opt = "MX";
+
+/*	TString what_to_opt = "MX";
 	double xmin = 250;
 	double xmax = 800;
 	Double_t precision=5;  //0.01 for MVA, 5 for MX
 */
-/*
-	TString what_to_opt = "ttHScore";
+
+/*	TString what_to_opt = "ttHScore";
 	double xmin = 0.;
 	double xmax = 1.;
-	Double_t precision=0.01;  //0.01 for MVA, 5 for MX
+	Double_t precision=0.02;  //0.01 for MVA, 5 for MX
 */
 
-	bool consider_ttH = false;
+	bool consider_ttH = true;
 	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
-	if (consider_ttH)  Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
+	if (consider_ttH)  Mgg_window = "*((Mgg>120)&&(Mgg<130))"; // this narrow window only for ttH
 	TString Mgg_sideband = "*((Mgg<=115)||(Mgg>=135))";
 	double tth_cut = 0.;
 	TString tth_cut_s;
@@ -59,18 +60,18 @@ int main(int argc, char* argv[]){
 	TString selection_bg = "weight*lumi*overlapSave*normalization/SumWeight";
 	TString selection_diphoton = "*1.5"; //SF needed to match data normalization
 
-	TString subcategory = "";
 	TString outstr = "";
+	TString subcategory = "";
    if (consider_ttH) outstr = "tth";
 	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX
+/*
+	subcategory = "*((MVAOutputTransformed>0.685)&&(MVAOutputTransformed<1.))";
+	outstr = "_MVA0";
+	minevents = 6; //for bkg  # for MVA :100,  because still need to be able to split in MX
 
-/*	TString subcategory = "*((MVAOutputTransformed>0.685)&&(MVAOutputTransformed<1.))";
-	TString outstr = "_MVA0";
-	double minevents = 6; //for bkg  # for MVA :100,  because still need to be able to split in MX
-*/
-/*	TString subcategory = "*((MVAOutputTransformed>0.6725)&&(MVAOutputTransformed<1.))";
-	TString outstr = "_MVA0";
-	double minevents = 40; //ttH before everything, 0 min events
+	subcategory = "*((MVAOutputTransformed>0.6725)&&(MVAOutputTransformed<1.))";
+	outstr = "_MVA0";
+	minevents = 40; //ttH before everything, 0 min events
 */
 
 	selection_sig += subcategory;
@@ -261,7 +262,7 @@ double tth_max = 0.;
 double tth_inc = 0.02;
 if (consider_ttH) {
 	tth_cut = 0.1;
-	tth_max = 0.4;
+	tth_max = 0.3;
 	tth_inc = 0.02;
 }
 int tth_cut_idx = 0;
@@ -310,9 +311,9 @@ do {
    s.Form("%s>>+hist_B_cut_sideband",what_to_opt.Data());
 	if (consider_ttH) {
 		tree_bg_ttH->Draw(s,sel,"goff");
-		tree_bg_TTGJets->Draw(s,sel,"goff");
-		tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
-		tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
+//		tree_bg_TTGJets->Draw(s,sel,"goff");
+//		tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
+//		tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
 	}	
 
 	do {
@@ -324,7 +325,7 @@ do {
 		start_n[1]=start_n[0]+precision;
 		if (bkg_sideband_n[0]>minevents) {
 			categories_scans0.push_back(start_n[0]);	
-			significance_scans0.push_back(sqrt(max_n[0]));
+			significance_scans0.push_back(sqrt(max_n[1]));
 		}
 		do {
 			max_n[1]=0;
@@ -335,7 +336,7 @@ do {
 			start_n[2]=start_n[1]+precision;
 			if (bkg_sideband_n[1]>minevents) {
 				categories_scans1.push_back(start_n[1]);	
-				significance_scans1.push_back(sqrt(max_n[1]));
+				significance_scans1.push_back(sqrt(max_n[2]));
 			}
 			do{
 				max_n[2]=0;
@@ -352,7 +353,7 @@ do {
 				start_n[3]=start_n[2]+precision;
 				if (bkg_sideband_n[2]>minevents) {
 					categories_scans2.push_back(start_n[2]);	
-					significance_scans2.push_back(sqrt(max_n[2]));
+					significance_scans2.push_back(sqrt(max_n[3]));
 				}
 				do{
 					max_n[3]=0;
@@ -368,7 +369,7 @@ do {
 					if (bkg_n[3]!=0) max_n[3]=pow(sig_n[3],2)/(bkg_n[3]);
 					if (bkg_sideband_n[3]>minevents) {
 						categories_scans3.push_back(start_n[3]);	
-						significance_scans3.push_back(sqrt(max_n[3]));
+						significance_scans3.push_back(sqrt(max_n[4]));
 					}
 					max_n[4]=0;
                if (NCAT<=4) {
@@ -404,7 +405,6 @@ do {
 							max_total = max_sum;
 							tth_cut_final = tth_cut;
 							tth_cut_idx_final = tth_cut_idx;
-							significance_scans_tth.push_back(sqrt(max_sum));
 						} 
 					}
 					start_n[3]+=precision;
@@ -417,6 +417,7 @@ do {
 	} while (start_n[0]<=(END-(NCAT-1)*precision));
 	tth_cut+=0.02;
 	tth_cut_idx+=1;
+	std::cout<<max_total<<std::endl;
 
 categories_scans0_vec.push_back(categories_scans0);
 categories_scans1_vec.push_back(categories_scans1);
@@ -428,6 +429,7 @@ significance_scans1_vec.push_back(significance_scans1);
 significance_scans2_vec.push_back(significance_scans2);
 significance_scans3_vec.push_back(significance_scans3);
 significance_scans4_vec.push_back(significance_scans4);
+significance_scans_tth.push_back(sqrt(max_total));
 
 } while (tth_cut<tth_max);
 
@@ -532,18 +534,20 @@ significance_scans4_vec.push_back(significance_scans4);
 /////////////////////////////////Plot scan of significance vs point
 std::vector<std::vector<double>> chosen_categories_scan;
 std::vector<std::vector<double>> chosen_significance_scan;
+chosen_categories_scan.push_back(categories_scans_tth);
 chosen_categories_scan.push_back(categories_scans0_vec[tth_cut_idx_final]);
 chosen_categories_scan.push_back(categories_scans1_vec[tth_cut_idx_final]);
 chosen_categories_scan.push_back(categories_scans2_vec[tth_cut_idx_final]);
 chosen_categories_scan.push_back(categories_scans3_vec[tth_cut_idx_final]);
 chosen_categories_scan.push_back(categories_scans4_vec[tth_cut_idx_final]);
+chosen_significance_scan.push_back(significance_scans_tth);
 chosen_significance_scan.push_back(significance_scans0_vec[tth_cut_idx_final]);
 chosen_significance_scan.push_back(significance_scans1_vec[tth_cut_idx_final]);
 chosen_significance_scan.push_back(significance_scans2_vec[tth_cut_idx_final]);
 chosen_significance_scan.push_back(significance_scans3_vec[tth_cut_idx_final]);
 chosen_significance_scan.push_back(significance_scans4_vec[tth_cut_idx_final]);
 
-for (int index=0;index<NCAT;index++){
+for (int index=0;index<NCAT+1;index++){ // first is ttH
    std::vector<double> cat_gr_vec = chosen_categories_scan[index];
    std::vector<double> sign_gr_vec = chosen_significance_scan[index];
 	double* cat_scan = &cat_gr_vec[0];
@@ -553,6 +557,7 @@ for (int index=0;index<NCAT;index++){
 	ymin = *std::max_element(sign_scan,sign_scan+counter) * 0.5;
 	ymax = *std::max_element(sign_scan,sign_scan+counter) * 1.1;
 	int max_pos = std::distance(sign_scan, std::max_element(sign_scan,sign_scan+counter));
+	ymin=0.;
 
 	TCanvas *c2 = new TCanvas("B","",800,800);
 	c2->cd();

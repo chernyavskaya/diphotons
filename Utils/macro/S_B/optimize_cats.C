@@ -76,7 +76,7 @@ int main(int argc, char* argv[]){
 	selection_bg += subcategory;
 
 
-	TString date = "22_10_2019_legend";
+	TString date = "22_10_2019_test";
 	TString s; TString sel; 
 	TString outname = s.Format("output_SB_%s_cat%d_minevents%.0f_%s",what_to_opt.Data(),NCAT,minevents,outstr.Data());
 
