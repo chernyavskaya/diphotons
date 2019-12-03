@@ -29,29 +29,28 @@ int main(int argc, char* argv[]){
 
 	TString path="/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/20191008/";
 	
-	const int NCAT=2;
+	const int NCAT=4; //4 for MVA and MX, 2 for tth
 
 /*	TString what_to_opt = "MVAOutputTransformed";
 	double xmin = 0.;
 	double xmax = 1.;
 	Double_t precision=0.01;  //0.01 for MVA, 5 for MX
 */
-/*
+
 	TString what_to_opt = "MX";
 	double xmin = 250;
 	double xmax = 800;
 	Double_t precision=5;  //0.01 for MVA, 5 for MX
-*/
 
+/*
 	TString what_to_opt = "ttHScore";
 	double xmin = 0.;
 	double xmax = 1.;
 	Double_t precision=0.02;  
+*/
 
 
-
-	TString Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
-//	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
+	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
 	TString Mgg_sideband = "*((Mgg<=115)||(Mgg>=135))";
 	TString selection_sig = "weight*lumi*eventTrainedOn*0.587";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box
 	TString selection_bg = "weight*lumi*overlapSave";
@@ -61,23 +60,23 @@ int main(int argc, char* argv[]){
 	TString outstr = "";
 	double minevents = 60; //
 */
-/*	TString subcategory = "*((MVAOutputTransformed>0.29)&&(MVAOutputTransformed<.51))";
+	TString subcategory = "*((MVAOutputTransformed>0.3)&&(MVAOutputTransformed<.54))*(ttHScore>0.2)";
 	TString outstr = "_MVA2";
 	double minevents = 8; //
-*/
-//borders of categories : 0	0.29	0.51	0.68	1
 
-//	TString subcategory = "*((MVAOutputTransformed>0.68)&&(MVAOutputTransformed<1.))";
+//borders of categories : 0	0.30	0.54	0.70	1
+/*
 	TString subcategory = "*((MVAOutputTransformed>0.70)&&(MVAOutputTransformed<1.))";
 	TString outstr = "_simultMVA0";
+	Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
 	double minevents = 45; 
-
+*/
 
 	selection_sig += subcategory;
 	selection_bg += subcategory;
 
 
-	TString date = "22_10_2019";
+	TString date = "22_10_2019_legend";
 	TString s; TString sel; 
 	TString outname = s.Format("output_SB_%s_cat%d_minevents%.0f_%s",what_to_opt.Data(),NCAT,minevents,outstr.Data());
 
@@ -182,7 +181,6 @@ int main(int argc, char* argv[]){
 	leg->SetTextSize(0.025);
 	leg->AddEntry(hist_S2,"Sig (exp. exclusion)","F");
 	leg->AddEntry(hist_B2,"BG","F");
-	leg->AddEntry(hist_B_cut_tth,"ttH","L");
 
 
 
@@ -229,9 +227,12 @@ std::vector<double> categories_scans1;
 std::vector<double> categories_scans2;
 std::vector<double> categories_scans3;
 std::vector<double> significance_scans0;
+std::vector<double> significance_scans1;
+std::vector<double> significance_scans2;
+std::vector<double> significance_scans3;
 
 /////////////////////// Do you need ttH ???///////////////
-hist_B->Add(hist_B_cut_tth);
+//hist_B->Add(hist_B_cut_tth);
 //////////////////////////////////////////////////////////
 	do {
 		max_n[0]=0;
@@ -245,7 +246,8 @@ hist_B->Add(hist_B_cut_tth);
 ///////////////
 		bkg_sideband_n[1] = hist_B_sideband->Integral(hist_B_sideband->FindBin(start_n[0]),hist_B_sideband->GetNbinsX()+1);
 		if (bkg_n[1]!=0) max_n[1]=pow(sig_n[1],2)/bkg_n[1];
-		if (bkg_sideband_n[1]>minevents) {
+		//if (bkg_sideband_n[1]>minevents) {
+		if (1>0) {
 			categories_scans0.push_back(start_n[0]);	
 			significance_scans0.push_back(sqrt(max_n[1]));
 		}
@@ -307,12 +309,12 @@ hist_B->Add(hist_B_cut_tth);
 
 					double max_sum = 0;
 					int minevt_cond = 0; //condition is false
-					for (int index=1;index<NCAT;index++){ //start from 1 for tth
+					for (int index=0;index<NCAT;index++){ //start from 1 for tth  only when optimizing separately
 						max_sum+=max_n[index];
 						minevt_cond_n[index] = (bkg_sideband_n[index]>minevents);
 					}
-					minevt_cond = std::accumulate(minevt_cond_n+1, minevt_cond_n + NCAT, 0); // +1 for tth
-					if (((max_sum)>=max) && (minevt_cond==(NCAT-1))) { //NCAT-1 for tth
+					minevt_cond = std::accumulate(minevt_cond_n, minevt_cond_n + NCAT, 0); // minevt_cond_n+1 for tth only when optimizing separately
+					if (((max_sum)>=max) && (minevt_cond==(NCAT))) { //NCAT-1 for tth
 						max = max_sum;
 						for (int index=0;index<NCAT;index++){
 							borders[index+1] = start_n[index]; //first and last are START and END 
@@ -406,7 +408,8 @@ hist_B->Add(hist_B_cut_tth);
 
 	hist_B2->Draw("HISTsame");
 	hist_S2->Draw("HISTsame");
-	hist_B_cut_tth->Draw("HISTsame");
+//	hist_B_cut_tth->Draw("HISTsame");
+//	leg->AddEntry(hist_B_cut_tth,"ttH","L");
 
 	gPad->Update();
 	pCMS1.Draw("same");
@@ -436,8 +439,9 @@ hist_B->Add(hist_B_cut_tth);
 	TH1F *frame3 = new TH1F("frame3","",50,xmin,xmax);
 	frame3->GetXaxis()->SetNdivisions(505);
    frame3->SetStats(0);
-	frame3->SetYTitle("S/#sqrt{B_{#gamma#gamma}+B_{ttH}}");
-//	frame3->SetYTitle("S/#sqrt{B}");
+//	frame3->SetYTitle("S/#sqrt{B_{#gamma#gamma}+B_{ttH}}");
+	frame3->SetYTitle("S/#sqrt{B}");
+	frame3->GetYaxis()->SetTitleOffset(1.32);
 	frame3->SetXTitle(s.Format("%s",what_to_opt.Data()));	
 	frame3->SetMinimum(ymin);
 	frame3->SetMaximum(ymax);
@@ -450,6 +454,7 @@ hist_B->Add(hist_B_cut_tth);
 	pave22.Draw("same");
 	pave33.Draw("same");
 	gPad->RedrawAxis();
+	c2->Print(s.Format("plots/%s/significance_%s.pdf",date.Data(),outname.Data()));
 	c2->Print(s.Format("plots/%s/significance_%s.png",date.Data(),outname.Data()));
 	cout<<counter<<endl; 
 

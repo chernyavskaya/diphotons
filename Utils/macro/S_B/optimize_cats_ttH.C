@@ -15,6 +15,7 @@
 #include "TROOT.h"
 #include "TLatex.h"
 #include "TLegend.h"
+#include "TGraph.h"
 
 using namespace std;
 
@@ -23,10 +24,12 @@ using namespace std;
 int main(int argc, char* argv[]){
 	gROOT->ProcessLine(".x /afs/cern.ch/work/n/nchernya/setTDRStyle.C");
 	
-
-	TString path="/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/20191008/";
+	TString s; 
+	TString date = "20191126";
+	TString path=s.Format("/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/%s/",date.Data());
 	
-	const int NCAT=4;
+	const int NCAT=3; //for MVA
+	//const int NCAT=4;// for MX
 
 	TString what_to_opt = "MVAOutputTransformed";
 	double xmin = 0.;
@@ -45,22 +48,22 @@ int main(int argc, char* argv[]){
 	Double_t precision=0.01;  //0.01 for MVA, 5 for MX
 */
 
-
+	bool consider_ttH = false;
 	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
-//	TString Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
+	if (consider_ttH)  Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
 	TString Mgg_sideband = "*((Mgg<=115)||(Mgg>=135))";
-	TString selection_sig = "weight*lumi*eventTrainedOn*0.587";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box
-	TString selection_bg = "weight*lumi*overlapSave";
+	double tth_cut = 0.;
+	TString tth_cut_s;
+	tth_cut_s.Form("*(ttHScore>%.3f)",tth_cut);
+	TString selection_sig = "weight*lumi*2*eventTrainedOn*0.587*normalization/SumWeight";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by two because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
+	TString selection_bg = "weight*lumi*overlapSave*normalization/SumWeight";
 	TString selection_diphoton = "*1.5"; //SF needed to match data normalization
 
 	TString subcategory = "";
-	TString outstr = "tth_wide_window";
+	TString outstr = "";
+   if (consider_ttH) outstr = "tth";
 	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX
 
-//borders of categories : 0.0025	0.2925	0.5125	0.6725	0.9975
-//borders of categories : 0.0025	0.3125	0.5725	0.6925	0.9975
-
-//borders of categories : 0.005	0.285	0.505	0.685	0.995
 /*	TString subcategory = "*((MVAOutputTransformed>0.685)&&(MVAOutputTransformed<1.))";
 	TString outstr = "_MVA0";
 	double minevents = 6; //for bkg  # for MVA :100,  because still need to be able to split in MX
@@ -74,36 +77,45 @@ int main(int argc, char* argv[]){
 	selection_bg += subcategory;
 
 
-	TString date = "22_10_2019";
-	TString s; TString sel; 
+	TString sel; 
 	TString outname = s.Format("output_SB_%s_cat%d_minevents%.0f_%s",what_to_opt.Data(),NCAT,minevents,outstr.Data());
 
 
-	TFile *file_s =  TFile::Open(path+"Total_sig_bkg_tth.root");
+	TFile *file_s =  TFile::Open(path+"Total_runII_20191126.root");
 	TTree *tree_sig = (TTree*)file_s->Get("reducedTree_sig");
 	TH1F *hist_S = new TH1F("hist_S","hist_S",int((xmax-xmin)/precision),xmin,xmax);
    s.Form("%s>>hist_S",what_to_opt.Data());
-   sel.Form("%s",(selection_sig+Mgg_window).Data());
+   sel.Form("%s",(selection_sig+Mgg_window+tth_cut_s).Data());
 	tree_sig->Draw(s,sel,"goff");
 
-	TFile *file_bg =  TFile::Open(path+"Total_sig_bkg_tth.root");
+	TFile *file_bg =  TFile::Open(path+"Total_runII_20191126.root");
 	TTree *tree_bg = (TTree*)file_bg->Get("reducedTree");
-	TTree *tree_bg_ttH = (TTree*)file_bg->Get("reducedTree_bkg_0");
+	TTree *tree_bg_ttH = (TTree*)file_bg->Get("reducedTree_bkg_ttH");
+	TTree *tree_bg_TTGJets = (TTree*)file_bg->Get("reducedTree_bkg_TTGJets");
+	TTree *tree_bg_TTTo2L2Nu = (TTree*)file_bg->Get("reducedTree_bkg_TTTo2L2Nu");
+	TTree *tree_bg_TTGG_0Jets = (TTree*)file_bg->Get("reducedTree_bkg_TTGG_0Jets");
 
 	TH1F *hist_B = new TH1F("hist_B","hist_B",int((xmax-xmin)/precision),xmin,xmax); //200 bins
    s.Form("%s>>hist_B",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+selection_diphoton+Mgg_window).Data());
-	tree_bg->Draw(s,sel,"goff");
-
-	TH1F *hist_B_sideband = new TH1F("hist_B_sideband","hist_B_sideband",int((xmax-xmin)/precision),xmin,xmax); //200 bins
-   s.Form("%s>>hist_B_sideband",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+selection_diphoton+Mgg_sideband).Data());
+   sel.Form("%s",(selection_bg+selection_diphoton+Mgg_window+tth_cut_s).Data());
 	tree_bg->Draw(s,sel,"goff");
 
 	TH1F *hist_B_ttH = new TH1F("hist_B_ttH","hist_B_ttH",int((xmax-xmin)/precision),xmin,xmax); //200 bins
    s.Form("%s>>hist_B_ttH",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+Mgg_window).Data());
+   sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
 	tree_bg_ttH->Draw(s,sel,"goff");
+	TH1F *hist_B_TTGJets = new TH1F("hist_B_TTGJets","hist_B_TTGJets",int((xmax-xmin)/precision),xmin,xmax); //200 bins
+   s.Form("%s>>hist_B_TTGJets",what_to_opt.Data());
+   sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
+	tree_bg_TTGJets->Draw(s,sel,"goff");
+	TH1F *hist_B_TTTo2L2Nu = new TH1F("hist_B_TTTo2L2Nu","hist_B_TTTo2L2Nu",int((xmax-xmin)/precision),xmin,xmax); //200 bins
+   s.Form("%s>>hist_B_TTTo2L2Nu",what_to_opt.Data());
+   sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
+	tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
+	TH1F *hist_B_TTGG_0Jets = new TH1F("hist_B_TTGG_0Jets","hist_B_TTGG_0Jets",int((xmax-xmin)/precision),xmin,xmax); //200 bins
+   s.Form("%s>>hist_B_TTGG_0Jets",what_to_opt.Data());
+   sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
+	tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
 
 	
 
@@ -120,11 +132,12 @@ int main(int argc, char* argv[]){
 	hist_B->SetLineWidth(2);
 	hist_B_ttH->SetLineColor(kGreen+1);
 	hist_B_ttH->SetLineWidth(2);
-	TH1F *hist_B2 = (TH1F*)hist_B->Clone("b_new");
-	hist_B2->Rebin(1);
-	TH1F *hist_S2 = (TH1F*)hist_S->Clone("s_new");
-	hist_S2->Rebin(1);
-//	hist_S2->Scale();
+	hist_B_TTGJets->SetLineColor(kOrange+1);
+	hist_B_TTGJets->SetLineWidth(2);
+	hist_B_TTTo2L2Nu->SetLineColor(kMagenta+1);
+	hist_B_TTTo2L2Nu->SetLineWidth(2);
+	hist_B_TTGG_0Jets->SetLineColor(kViolet+1);
+	hist_B_TTGG_0Jets->SetLineWidth(2);
 
 
 // CMS info
@@ -184,7 +197,12 @@ int main(int argc, char* argv[]){
 	leg->SetTextSize(0.025);
 	leg->AddEntry(hist_S,"Sig (exp. exclusion)","F");
 	leg->AddEntry(hist_B,"BG","F");
-
+   if (consider_ttH) {
+		leg->AddEntry(hist_B_ttH,"ttH","L");
+		leg->AddEntry(hist_B_TTGJets,"tt#gamma+jets","L");
+		leg->AddEntry(hist_B_TTTo2L2Nu,"tt#rightarrow2l2#nu","L");
+		leg->AddEntry(hist_B_TTGG_0Jets,"tt#gamma#gamma","L");
+	}
 
 
 	double bin=0.;
@@ -192,14 +210,30 @@ int main(int argc, char* argv[]){
 	int i=0;
 	float max_all=0;	
 		do	{
-			s1=hist_S2->GetBinContent(i+1);
-			b1=hist_B2->GetBinContent(i+1);
-			bin=(double) hist_S2->GetBinCenter(i+1+1);
+			s1=hist_S->GetBinContent(i+1);
+			b1=hist_B->GetBinContent(i+1);
+			if (consider_ttH) {
+      	   b1+=hist_B_ttH->GetBinContent(i+1);
+        		b1+=hist_B_TTGJets->GetBinContent(i+1);
+        		b1+=hist_B_TTTo2L2Nu->GetBinContent(i+1);
+         	b1+=hist_B_TTGG_0Jets->GetBinContent(i+1);
+			}
+			bin=(double) hist_S->GetBinCenter(i+1+1);
 			if ((b1)!=0) max_all += pow(s1,2)/(b1);
 			i++;
 		} while (bin < END);
 
 
+std::vector<std::vector<double>> categories_scans0_vec;
+std::vector<std::vector<double>> categories_scans1_vec;
+std::vector<std::vector<double>> categories_scans2_vec;
+std::vector<std::vector<double>> categories_scans3_vec;
+std::vector<std::vector<double>> categories_scans4_vec;
+std::vector<std::vector<double>> significance_scans0_vec;
+std::vector<std::vector<double>> significance_scans1_vec;
+std::vector<std::vector<double>> significance_scans2_vec;
+std::vector<std::vector<double>> significance_scans3_vec;
+std::vector<std::vector<double>> significance_scans4_vec;
 
 double max = 0;
 double borders[10] = {};   // including START and END
@@ -214,6 +248,7 @@ double max_final[10] = {0,0,0,0,0,0,0,0,0,0};
 double max_final_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 double max_total = 0;
 double tth_cut_final = 0;
+double tth_cut_idx_final = 0;
 double start_n[10] = {0,0,0,0,0,0,0,0,0,0};
 double bkg_yields[10] = {0,0,0,0,0,0,0,0,0,0};
 double bkg_yields_sideband[10] = {0,0,0,0,0,0,0,0,0,0};
@@ -222,12 +257,32 @@ for (int index=0;index<NCAT;index++)
 	start_n[index]=START+(index+1)*precision; 
 int minevt_cond_n[10] = {};
 
-double tth_cut = 0.1;
-TString tth_cut_s;
+double tth_max = 0.;
+double tth_inc = 0.02;
+if (consider_ttH) {
+	tth_cut = 0.1;
+	tth_max = 0.4;
+	tth_inc = 0.02;
+}
+int tth_cut_idx = 0;
+std::vector<double> categories_scans_tth;
+std::vector<double> significance_scans_tth;
 do {
+	cout<<"Doing tth cut : "<<tth_cut<<endl;
+	categories_scans_tth.push_back(tth_cut);
+
+
+	std::vector<double> categories_scans0;
+	std::vector<double> categories_scans1;
+	std::vector<double> categories_scans2;
+	std::vector<double> categories_scans3;
+	std::vector<double> categories_scans4;
+	std::vector<double> significance_scans0;
+	std::vector<double> significance_scans1;
+	std::vector<double> significance_scans2;
+	std::vector<double> significance_scans3;
+	std::vector<double> significance_scans4;
 	
-for (int index=0;index<NCAT;index++)
-	start_n[index]=START+(index+1)*precision; 
 
 	tth_cut_s.Form("*(ttHScore>%.3f)",tth_cut);
 
@@ -240,87 +295,96 @@ for (int index=0;index<NCAT;index++)
    s.Form("%s>>hist_B_cut",what_to_opt.Data());
    sel.Form("%s",(selection_bg+selection_diphoton+Mgg_window+tth_cut_s).Data());
 	tree_bg->Draw(s,sel,"goff");
+   s.Form("%s>>+hist_B_cut",what_to_opt.Data());
+	if (consider_ttH) {
+		tree_bg_ttH->Draw(s,sel,"goff");
+		tree_bg_TTGJets->Draw(s,sel,"goff");
+		tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
+		tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
+	}
 
 	TH1F *hist_B_cut_sideband = new TH1F("hist_B_cut_sideband","hist_B_cut_sideband",int((xmax-xmin)/precision),xmin,xmax); //200 bins
    s.Form("%s>>hist_B_cut_sideband",what_to_opt.Data());
    sel.Form("%s",(selection_bg+selection_diphoton+Mgg_sideband+tth_cut_s).Data());
 	tree_bg->Draw(s,sel,"goff");
-
-	TH1F *hist_B_cut_tth = new TH1F("hist_B_cut_tth","hist_B_cut_tth",int((xmax-xmin)/precision),xmin,xmax); //200 bins
-   s.Form("%s>>hist_B_cut_tth",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
-	tree_bg_ttH->Draw(s,sel,"goff");
-
-
+   s.Form("%s>>+hist_B_cut_sideband",what_to_opt.Data());
+	if (consider_ttH) {
+		tree_bg_ttH->Draw(s,sel,"goff");
+		tree_bg_TTGJets->Draw(s,sel,"goff");
+		tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
+		tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
+	}	
 
 	do {
 		max_n[0]=0;
 		sig_n[0] = hist_S_cut->Integral(1,hist_S_cut->FindBin(start_n[0])-1);
 		bkg_n[0] = hist_B_cut->Integral(1,hist_B_cut->FindBin(start_n[0])-1);
-		bkg_n_tth[0] = hist_B_cut_tth->Integral(1,hist_B_cut_tth->FindBin(start_n[0])-1);
 		bkg_sideband_n[0] = hist_B_cut_sideband->Integral(1,hist_B_cut_sideband->FindBin(start_n[0])-1);
-		//if (bkg_n[0]!=0) max_n[0]=pow(sig_n[0],2)/bkg_n[0];
-		if (bkg_n[0]!=0) max_n[0]=pow(sig_n[1],2)/(bkg_n[0]+bkg_n_tth[0]);
-		if (bkg_n_tth[0]!=0) max_n_tth[0]=pow(sig_n[0],2)/bkg_n_tth[0];
+		if (bkg_n[0]!=0) max_n[0]=pow(sig_n[1],2)/(bkg_n[0]);
 		start_n[1]=start_n[0]+precision;
+		if (bkg_sideband_n[0]>minevents) {
+			categories_scans0.push_back(start_n[0]);	
+			significance_scans0.push_back(sqrt(max_n[0]));
+		}
 		do {
 			max_n[1]=0;
 			sig_n[1] = hist_S_cut->Integral(hist_S_cut->FindBin(start_n[0]),hist_S_cut->FindBin(start_n[1])-1);
 			bkg_n[1] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[0]),hist_B_cut->FindBin(start_n[1])-1);
-			bkg_n_tth[1] = hist_B_cut_tth->Integral(hist_B_cut_tth->FindBin(start_n[0]),hist_B_cut_tth->FindBin(start_n[0])-1);
 			bkg_sideband_n[1] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[0]),hist_B_cut_sideband->FindBin(start_n[1])-1);
-			//if (bkg_n[1]!=0) max_n[1]=pow(sig_n[1],2)/bkg_n[1];
-			if (bkg_n[1]!=0) max_n[1]=pow(sig_n[1],2)/(bkg_n[1]+bkg_n_tth[1]);
-			if (bkg_n_tth[1]!=0) max_n_tth[1]=pow(sig_n[1],2)/bkg_n_tth[1];
+			if (bkg_n[1]!=0) max_n[1]=pow(sig_n[1],2)/(bkg_n[1]);
 			start_n[2]=start_n[1]+precision;
+			if (bkg_sideband_n[1]>minevents) {
+				categories_scans1.push_back(start_n[1]);	
+				significance_scans1.push_back(sqrt(max_n[1]));
+			}
 			do{
 				max_n[2]=0;
 				if (NCAT<=2) {
 					sig_n[2] = 0;
 					bkg_n[2] = 1; 
-					bkg_n_tth[2] = 1;
 					bkg_sideband_n[2] = 1; 
 				} else {
 					sig_n[2] = hist_S_cut->Integral(hist_S_cut->FindBin(start_n[1]),hist_S_cut->FindBin(start_n[2])-1);
 					bkg_n[2] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[1]),hist_B_cut->FindBin(start_n[2])-1);
-					bkg_n_tth[2] = hist_B_cut_tth->Integral(hist_B_cut_tth->FindBin(start_n[1]),hist_B_cut_tth->FindBin(start_n[2])-1);
 					bkg_sideband_n[2] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[1]),hist_B_cut_sideband->FindBin(start_n[2])-1);
 				}
-				//if (bkg_n[2]!=0) max_n[2]=pow(sig_n[2],2)/bkg_n[2];
-				if (bkg_n[2]!=0) max_n[2]=pow(sig_n[2],2)/(bkg_n[2]+bkg_n_tth[2]);
-				if (bkg_n_tth[2]!=0) max_n_tth[2]=pow(sig_n[2],2)/bkg_n_tth[2];
+				if (bkg_n[2]!=0) max_n[2]=pow(sig_n[2],2)/(bkg_n[2]);
 				start_n[3]=start_n[2]+precision;
+				if (bkg_sideband_n[2]>minevents) {
+					categories_scans2.push_back(start_n[2]);	
+					significance_scans2.push_back(sqrt(max_n[2]));
+				}
 				do{
 					max_n[3]=0;
 					if (NCAT<=3) {
 						sig_n[3] = 0;
 						bkg_n[3] = 1; 
-						bkg_n_tth[3] = 1;
 						bkg_sideband_n[3] = 1; 
 					} else {
 						sig_n[3] = hist_S_cut->Integral(hist_S_cut->FindBin(start_n[2]),hist_S_cut->FindBin(start_n[3])-1);
 						bkg_n[3] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[2]),hist_B_cut->FindBin(start_n[3])-1);
-						bkg_n_tth[3] = hist_B_cut_tth->Integral(hist_B_cut_tth->FindBin(start_n[2]),hist_B_cut_tth->FindBin(start_n[3])-1);
 						bkg_sideband_n[3] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[2]),hist_B_cut_sideband->FindBin(start_n[3])-1);
 					}
-					//if (bkg_n[3]!=0) max_n[3]=pow(sig_n[3],2)/bkg_n[3];
-					if (bkg_n[3]!=0) max_n[3]=pow(sig_n[3],2)/(bkg_n[3]+bkg_n_tth[3]);
-					if (bkg_n_tth[3]!=0) max_n_tth[3]=pow(sig_n[3],2)/bkg_n_tth[3];
+					if (bkg_n[3]!=0) max_n[3]=pow(sig_n[3],2)/(bkg_n[3]);
+					if (bkg_sideband_n[3]>minevents) {
+						categories_scans3.push_back(start_n[3]);	
+						significance_scans3.push_back(sqrt(max_n[3]));
+					}
 					max_n[4]=0;
                if (NCAT<=4) {
                	sig_n[4] = 0.;
                   bkg_n[4] = 1.;
-						bkg_n_tth[4] = 1;
                   bkg_sideband_n[4] = 1.;
                } else {
 						sig_n[4] = hist_S_cut->Integral(hist_S_cut->FindBin(start_n[3]),hist_S_cut->GetNbinsX()+1);
 						bkg_n[4] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[3]),hist_B_cut->GetNbinsX()+1);
-						bkg_n_tth[4] = hist_B_cut_tth->Integral(hist_B_cut_tth->FindBin(start_n[3]),hist_B_cut_tth->GetNbinsX()+1);
 						bkg_sideband_n[4] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[3]),hist_B_cut_sideband->GetNbinsX()+1);
                }
-				//	if (bkg_n[4]!=0) max_n[4]=pow(sig_n[4],2)/(bkg_n[4]);
-					if (bkg_n[4]!=0) max_n[4]=pow(sig_n[4],2)/(bkg_n[4]+bkg_n_tth[4]);
-					if (bkg_n_tth[4]!=0) max_n_tth[4]=pow(sig_n[4],2)/bkg_n_tth[4];
+					if (bkg_n[4]!=0) max_n[4]=pow(sig_n[4],2)/(bkg_n[4]);
+					if (bkg_sideband_n[4]>minevents) {
+						categories_scans4.push_back(start_n[4]);	
+						significance_scans4.push_back(sqrt(max_n[4]));
+					}
 
 					double max_sum = 0;
 					int minevt_cond = 0; //condition is false
@@ -334,14 +398,14 @@ for (int index=0;index<NCAT;index++)
 						for (int index=0;index<NCAT;index++){
 							borders[index+1] = start_n[index]; //first and last are START and END 
 							max_final[index] = max_n[index]; 
-							max_final_tth[index] = max_n_tth[index]; 
 							bkg_yields[index] = bkg_n[index]; 
 							bkg_yields_sideband[index] = bkg_sideband_n[index]; 
 							sig_yields[index] = sig_n[index];
 							max_total = max_sum;
 							tth_cut_final = tth_cut;
+							tth_cut_idx_final = tth_cut_idx;
+							significance_scans_tth.push_back(sqrt(max_sum));
 						} 
-						cout<<"tth cut : "<<tth_cut<<endl;
 					}
 					start_n[3]+=precision;
 				} while (start_n[3]<=(END-(NCAT-4)*precision));
@@ -352,7 +416,20 @@ for (int index=0;index<NCAT;index++)
 		start_n[0]+=precision;
 	} while (start_n[0]<=(END-(NCAT-1)*precision));
 	tth_cut+=0.02;
-} while (tth_cut<0.4);
+	tth_cut_idx+=1;
+
+categories_scans0_vec.push_back(categories_scans0);
+categories_scans1_vec.push_back(categories_scans1);
+categories_scans2_vec.push_back(categories_scans2);
+categories_scans3_vec.push_back(categories_scans3);
+categories_scans4_vec.push_back(categories_scans4);
+significance_scans0_vec.push_back(significance_scans0);
+significance_scans1_vec.push_back(significance_scans1);
+significance_scans2_vec.push_back(significance_scans2);
+significance_scans3_vec.push_back(significance_scans3);
+significance_scans4_vec.push_back(significance_scans4);
+
+} while (tth_cut<tth_max);
 
 	borders[NCAT] = END;
 
@@ -406,12 +483,12 @@ for (int index=0;index<NCAT;index++)
 
 
 
-	float ymin=hist_S2->GetBinContent(hist_S2->FindFirstBinAbove(0.))*0.1;
-	float ymax=hist_B2->GetMaximum()*1e02;
+	float ymin=hist_S->GetBinContent(hist_S->FindFirstBinAbove(0.))*0.1;
+	float ymax=hist_B->GetMaximum()*1e02;
 
 	TLine* lines[10];
 	for (int index=0;index<NCAT-1;index++){
-		lines[index] = new TLine(borders[index+1],ymin,borders[index+1],hist_B2->GetBinContent(hist_B2->FindBin(borders[index+1])));
+		lines[index] = new TLine(borders[index+1],ymin,borders[index+1],hist_B->GetBinContent(hist_B->FindBin(borders[index+1])));
 		lines[index]->SetLineStyle(9);
 		lines[index]->SetLineColor(1);
 		lines[index]->SetLineWidth(2);
@@ -430,9 +507,14 @@ for (int index=0;index<NCAT;index++)
 	frame2->SetMaximum(ymax);
 	frame2->Draw();
 
-	hist_B2->Draw("HISTsame");
-	hist_S2->Draw("HISTsame");
-	hist_B_ttH->Draw("HISTsame");
+	hist_B->Draw("HISTsame");
+	hist_S->Draw("HISTsame");
+   if (consider_ttH) {
+		hist_B_ttH->Draw("HISTsame");
+		hist_B_TTGJets->Draw("HISTsame");
+		hist_B_TTTo2L2Nu->Draw("HISTsame");
+		hist_B_TTGG_0Jets->Draw("HISTsame");
+	}	
 
 	gPad->Update();
 	pCMS1.Draw("same");
@@ -447,7 +529,55 @@ for (int index=0;index<NCAT;index++)
 	c1->Print(s.Format("plots/%s/%s.png",date.Data(),outname.Data()));
 	c1->Print(s.Format("plots/%s/%s.pdf",date.Data(),outname.Data()));
 
+/////////////////////////////////Plot scan of significance vs point
+std::vector<std::vector<double>> chosen_categories_scan;
+std::vector<std::vector<double>> chosen_significance_scan;
+chosen_categories_scan.push_back(categories_scans0_vec[tth_cut_idx_final]);
+chosen_categories_scan.push_back(categories_scans1_vec[tth_cut_idx_final]);
+chosen_categories_scan.push_back(categories_scans2_vec[tth_cut_idx_final]);
+chosen_categories_scan.push_back(categories_scans3_vec[tth_cut_idx_final]);
+chosen_categories_scan.push_back(categories_scans4_vec[tth_cut_idx_final]);
+chosen_significance_scan.push_back(significance_scans0_vec[tth_cut_idx_final]);
+chosen_significance_scan.push_back(significance_scans1_vec[tth_cut_idx_final]);
+chosen_significance_scan.push_back(significance_scans2_vec[tth_cut_idx_final]);
+chosen_significance_scan.push_back(significance_scans3_vec[tth_cut_idx_final]);
+chosen_significance_scan.push_back(significance_scans4_vec[tth_cut_idx_final]);
 
+for (int index=0;index<NCAT;index++){
+   std::vector<double> cat_gr_vec = chosen_categories_scan[index];
+   std::vector<double> sign_gr_vec = chosen_significance_scan[index];
+	double* cat_scan = &cat_gr_vec[0];
+	double* sign_scan = &sign_gr_vec[0];
+	int counter = sign_gr_vec.size();
+	TGraph *gr =new TGraph(counter,cat_scan,sign_scan);
+	ymin = *std::max_element(sign_scan,sign_scan+counter) * 0.5;
+	ymax = *std::max_element(sign_scan,sign_scan+counter) * 1.1;
+	int max_pos = std::distance(sign_scan, std::max_element(sign_scan,sign_scan+counter));
+
+	TCanvas *c2 = new TCanvas("B","",800,800);
+	c2->cd();
+	TH1F *frame3 = new TH1F("frame3","",50,xmin,xmax);
+	frame3->GetXaxis()->SetNdivisions(505);
+   frame3->SetStats(0);
+//	frame3->SetYTitle("S/#sqrt{B_{#gamma#gamma}+B_{ttH}}");
+	frame3->SetYTitle("S/#sqrt{B}");
+	frame3->GetYaxis()->SetTitleOffset(1.32);
+	frame3->SetXTitle(s.Format("%s",what_to_opt.Data()));	
+	frame3->SetMinimum(ymin);
+	frame3->SetMaximum(ymax);
+	frame3->Draw();
+	gr->Draw("Psame");
+	gPad->Update();
+	pCMS1.Draw("same");
+	pCMS2.Draw("same");
+	pCMS12.Draw("same");
+	pave22.Draw("same");
+	pave33.Draw("same");
+	gPad->RedrawAxis();
+	c2->Print(s.Format("plots/%s/significance_CAT%d_%s.pdf",date.Data(),index,outname.Data()));
+	c2->Print(s.Format("plots/%s/significance_CAT%d_%s.png",date.Data(),index,outname.Data()));
+	cout<<counter<<endl; 
+}
 
 return 0;
 
