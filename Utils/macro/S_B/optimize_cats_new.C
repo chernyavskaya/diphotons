@@ -29,24 +29,24 @@ int main(int argc, char* argv[]){
 	TString date = "20191126";
 	TString path=s.Format("/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/%s/",date.Data());
 	
-	const int NCAT=2;
-/*
+	const int NCAT=4;
+
 	TString what_to_opt = "MVAOutputTransformed";
 	double xmin = 0.;
 	double xmax = 1.;
 	Double_t precision=0.01;  //0.01 for MVA, 5 for MX
-*/ /*
+ /*
 	TString what_to_opt = "MX";
 	double xmin = 250;
 	double xmax = 800;
 	Double_t precision=5;  //0.01 for MVA, 5 for MX
-*/
+
 
 	TString what_to_opt = "ttHScore";
 	double xmin = 0.;
 	double xmax = 1.;
 	Double_t precision=0.02;  //0.01 for MVA, 5 for MX
-
+*/
 
 
 //	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]){
 	TString selection_diphoton = "*1.5"; //SF needed to match data normalization
 
 	TString subcategory = "";
-	TString outstr = "tth";
+	TString outstr = "tth_test";
 	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX
 
 //borders of categories : 0.0025	0.2925	0.5125	0.6725	0.9975
@@ -137,6 +137,13 @@ int main(int argc, char* argv[]){
 	hist_B->SetLineWidth(2);
 	hist_B_ttH->SetLineColor(kGreen+1);
 	hist_B_ttH->SetLineWidth(2);
+	hist_B_TTGJets->SetLineColor(kOrange+1);
+	hist_B_TTGJets->SetLineWidth(2);
+	hist_B_TTTo2L2Nu->SetLineColor(kMagenta+1);
+	hist_B_TTTo2L2Nu->SetLineWidth(2);
+	hist_B_TTGG_0Jets->SetLineColor(kViolet+1);
+	hist_B_TTGG_0Jets->SetLineWidth(2);
+
 
 
 // CMS info
@@ -196,6 +203,10 @@ int main(int argc, char* argv[]){
 	leg->SetTextSize(0.025);
 	leg->AddEntry(hist_S,"Sig (exp. exclusion)","F");
 	leg->AddEntry(hist_B,"BG","F");
+		leg->AddEntry(hist_B_ttH,"ttH","L");
+		leg->AddEntry(hist_B_TTGJets,"tt#gamma+jets","L");
+		leg->AddEntry(hist_B_TTTo2L2Nu,"tt#rightarrow2l2#nu","L");
+		leg->AddEntry(hist_B_TTGG_0Jets,"tt#gamma#gamma","L");
 
 
 
@@ -206,6 +217,10 @@ int main(int argc, char* argv[]){
 		do	{
 			s1=hist_S->GetBinContent(i+1);
 			b1=hist_B->GetBinContent(i+1);
+      	   b1+=hist_B_ttH->GetBinContent(i+1);
+        		b1+=hist_B_TTGJets->GetBinContent(i+1);
+        		b1+=hist_B_TTTo2L2Nu->GetBinContent(i+1);
+         	b1+=hist_B_TTGG_0Jets->GetBinContent(i+1);
 			bin=(double) hist_S->GetBinCenter(i+1+1);
 			if ((b1)!=0) max_all += pow(s1,2)/(b1);
 			i++;
@@ -267,9 +282,9 @@ for (int index=0;index<NCAT;index++)
    s.Form("%s>>+hist_B_cut",what_to_opt.Data());
    sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
 	tree_bg_ttH->Draw(s,sel,"goff");
-		tree_bg_TTGJets->Draw(s,sel,"goff");
-		tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
-		tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
+	tree_bg_TTGJets->Draw(s,sel,"goff");
+	tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
+	tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
 
 
 
@@ -368,7 +383,7 @@ for (int index=0;index<NCAT;index++)
 	std::cout<<max_total<<std::endl;
 	significance_scans_tth.push_back(max_total);	
 
-} while (tth_cut<0.);
+} while (tth_cut<0.4);
 
 	borders[NCAT] = END;
 
