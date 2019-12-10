@@ -21,6 +21,13 @@ using namespace std;
 
 //g++ optimize_cats.C -g -o opt `root-config --cflags --glibs` -lMLP -lXMLIO
 
+float calc_Z0(float S, float B)
+{
+  //return pow(S,2)/B;
+  return 2*((S+B)*log(1+S/B)-S);
+}
+
+
 int main(int argc, char* argv[]){
 	gROOT->ProcessLine(".x /afs/cern.ch/work/n/nchernya/setTDRStyle.C");
 	
@@ -29,19 +36,19 @@ int main(int argc, char* argv[]){
 	TString path=s.Format("/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/%s/",date.Data());
    date = "20191210";	
 //	const int NCAT=2; //for tth killer
-	const int NCAT=4; //for MVA
-//	const int NCAT=4;// for MX
-
+	const int NCAT=4; //for MVA and MX
+/*
 	TString what_to_opt = "MVAOutputTransformed";
 	double xmin = 0.;
 	double xmax = 1.;
 	Double_t precision=0.01;  //0.01 for MVA, 5 for MX
+*/
 
-/*	TString what_to_opt = "MX";
+	TString what_to_opt = "MX";
 	double xmin = 250;
 	double xmax = 800;
 	Double_t precision=5;  //0.01 for MVA, 5 for MX
-*/
+
 
 /*	TString what_to_opt = "ttHScore";
 	double xmin = 0.;
@@ -49,32 +56,30 @@ int main(int argc, char* argv[]){
 	Double_t precision=0.02;  //0.01 for MVA, 5 for MX
 */
 
-	bool consider_ttH = true;
+	bool consider_ttH = false;
 	bool consider_tt = false;
 	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
 	if (consider_ttH)  Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
 	TString Mgg_sideband = "*((Mgg<=115)||(Mgg>=135))";
-	double tth_cut = 0.;
+	double tth_cut = 0.26;
 	TString tth_cut_s;
 	tth_cut_s.Form("*(ttHScore>%.3f)",tth_cut);
-	TString selection_sig = "weight*lumi*2*eventTrainedOn*0.587*normalization/SumWeight";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by *2 because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
+	TString selection_sig = "weight*lumi*eventTrainedOn*2*0.587*normalization/SumWeight";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by *2 because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
 	TString selection_bg = "weight*lumi*overlapSave*normalization/SumWeight";
 	TString selection_diphoton = "*1.5"; //SF needed to match data normalization
 
-	TString outstr = "";
+	TString outstr = "test_bkg";
 	TString subcategory = "";
    if (consider_ttH) outstr += "tth";
    if ((consider_ttH) && (consider_tt)) outstr += "tth_tt";
-	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX
-/*
-	subcategory = "*((MVAOutputTransformed>0.685)&&(MVAOutputTransformed<1.))";
-	outstr = "_MVA0";
-	minevents = 6; //for bkg  # for MVA :100,  because still need to be able to split in MX
+	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX*
 
-	subcategory = "*((MVAOutputTransformed>0.6725)&&(MVAOutputTransformed<1.))";
-	outstr = "_MVA0";
-	minevents = 40; //ttH before everything, 0 min events
-*/
+//	subcategory = "*((MVAOutputTransformed>0.7)&&(MVAOutputTransformed<1.))";
+//	subcategory = "*((MVAOutputTransformed>0.54)&&(MVAOutputTransformed<.7))";
+	subcategory = "*((MVAOutputTransformed>0.32)&&(MVAOutputTransformed<.54))";
+	outstr += "_MVA2";
+	minevents = 8; //for bkg  # for MVA :100,  because still need to be able to split in MX
+
 
 	selection_sig += subcategory;
 	selection_bg += subcategory;
@@ -226,7 +231,8 @@ int main(int argc, char* argv[]){
          	b1+=hist_B_TTGG_0Jets->GetBinContent(i+1);
 			}
 			bin=(double) hist_S->GetBinCenter(i+1+1);
-			if ((b1)!=0) max_all += pow(s1,2)/(b1);
+			//if ((b1)!=0) max_all += pow(s1,2)/(b1);
+			if ((b1)!=0) max_all += calc_Z0(s1,b1);
 			i++;
 		} while (bin < END);
 
@@ -319,7 +325,7 @@ do {
    s.Form("%s>>hist_B_cut_sideband",what_to_opt.Data());
    sel.Form("%s",(selection_bg+selection_diphoton+Mgg_sideband+tth_cut_s).Data());
 	tree_bg->Draw(s,sel,"goff"); //only add diphoton to the sideband
-/*   s.Form("%s>>+hist_B_cut_sideband",what_to_opt.Data());
+   s.Form("%s>>+hist_B_cut_sideband",what_to_opt.Data());
    sel.Form("%s",(selection_bg+Mgg_sideband+tth_cut_s).Data());
 	if (consider_ttH) {
 		tree_bg_ttH->Draw(s,sel,"goff");
@@ -329,13 +335,14 @@ do {
 		tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
 		tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
 	}	
-*/
+
 	do {
 		max_n[0]=0;
 		sig_n[0] = hist_S_cut->Integral(1,hist_S_cut->FindBin(start_n[0])-1);
 		bkg_n[0] = hist_B_cut->Integral(1,hist_B_cut->FindBin(start_n[0])-1);
 		bkg_sideband_n[0] = hist_B_cut_sideband->Integral(1,hist_B_cut_sideband->FindBin(start_n[0])-1);
-		if (bkg_n[0]!=0) max_n[0]=pow(sig_n[1],2)/(bkg_n[0]);
+		//if (bkg_n[0]!=0) max_n[0]=pow(sig_n[0],2)/(bkg_n[0]);
+		if (bkg_n[0]!=0) max_n[0]=calc_Z0(sig_n[0],bkg_n[0]);
 		start_n[1]=start_n[0]+precision;
 		if (bkg_sideband_n[0]>minevents) {
 			categories_scans0.push_back(start_n[0]);	
@@ -346,7 +353,8 @@ do {
 			sig_n[1] = hist_S_cut->Integral(hist_S_cut->FindBin(start_n[0]),hist_S_cut->FindBin(start_n[1])-1);
 			bkg_n[1] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[0]),hist_B_cut->FindBin(start_n[1])-1);
 			bkg_sideband_n[1] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[0]),hist_B_cut_sideband->FindBin(start_n[1])-1);
-			if (bkg_n[1]!=0) max_n[1]=pow(sig_n[1],2)/(bkg_n[1]);
+		//	if (bkg_n[1]!=0) max_n[1]=pow(sig_n[1],2)/(bkg_n[1]);
+			if (bkg_n[1]!=0) max_n[1]=calc_Z0(sig_n[1],bkg_n[1]);
 			start_n[2]=start_n[1]+precision;
 			if (bkg_sideband_n[1]>minevents) {
 				categories_scans1.push_back(start_n[1]);	
@@ -363,7 +371,8 @@ do {
 					bkg_n[2] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[1]),hist_B_cut->FindBin(start_n[2])-1);
 					bkg_sideband_n[2] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[1]),hist_B_cut_sideband->FindBin(start_n[2])-1);
 				}
-				if (bkg_n[2]!=0) max_n[2]=pow(sig_n[2],2)/(bkg_n[2]);
+			//	if (bkg_n[2]!=0) max_n[2]=pow(sig_n[2],2)/(bkg_n[2]);
+				if (bkg_n[2]!=0) max_n[2]=calc_Z0(sig_n[2],bkg_n[2]);
 				start_n[3]=start_n[2]+precision;
 				if (bkg_sideband_n[2]>minevents) {
 					categories_scans2.push_back(start_n[2]);	
@@ -380,7 +389,8 @@ do {
 						bkg_n[3] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[2]),hist_B_cut->FindBin(start_n[3])-1);
 						bkg_sideband_n[3] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[2]),hist_B_cut_sideband->FindBin(start_n[3])-1);
 					}
-					if (bkg_n[3]!=0) max_n[3]=pow(sig_n[3],2)/(bkg_n[3]);
+					//if (bkg_n[3]!=0) max_n[3]=pow(sig_n[3],2)/(bkg_n[3]);
+					if (bkg_n[3]!=0) max_n[3]=calc_Z0(sig_n[3],bkg_n[3]);
 					if (bkg_sideband_n[3]>minevents) {
 						categories_scans3.push_back(start_n[3]);	
 						significance_scans3.push_back(sqrt(max_n[4]));
@@ -395,7 +405,8 @@ do {
 						bkg_n[4] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[3]),hist_B_cut->GetNbinsX()+1);
 						bkg_sideband_n[4] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[3]),hist_B_cut_sideband->GetNbinsX()+1);
                }
-					if (bkg_n[4]!=0) max_n[4]=pow(sig_n[4],2)/(bkg_n[4]);
+				//	if (bkg_n[4]!=0) max_n[4]=pow(sig_n[4],2)/(bkg_n[4]);
+					if (bkg_n[4]!=0) max_n[4]=calc_Z0(sig_n[4],bkg_n[4]);
 					if (bkg_sideband_n[4]>minevents) {
 						categories_scans4.push_back(start_n[4]);	
 						significance_scans4.push_back(sqrt(max_n[4]));

@@ -295,7 +295,7 @@ for (int index=0;index<NCAT;index++)
 		bkg_n_tth[0] = hist_B_cut_tth->Integral(1,hist_B_cut_tth->FindBin(start_n[0])-1);
 		bkg_sideband_n[0] = hist_B_cut_sideband->Integral(1,hist_B_cut_sideband->FindBin(start_n[0])-1);
 		//if (bkg_n[0]!=0) max_n[0]=pow(sig_n[0],2)/bkg_n[0];
-		if (bkg_n[0]!=0) max_n[0]=pow(sig_n[1],2)/(bkg_n[0]);
+		if (bkg_n[0]!=0) max_n[0]=pow(sig_n[0],2)/(bkg_n[0]);
 		start_n[1]=start_n[0]+precision;
 		do {
 			max_n[1]=0;
