@@ -27,7 +27,7 @@ int main(int argc, char* argv[]){
 	TString s; 
 	TString date = "20191126";
 	TString path=s.Format("/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/%s/",date.Data());
-	
+   date = "20191210";	
 //	const int NCAT=2; //for tth killer
 	const int NCAT=4; //for MVA
 //	const int NCAT=4;// for MX
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]){
 	TString selection_bg = "weight*lumi*overlapSave*normalization/SumWeight";
 	TString selection_diphoton = "*1.5"; //SF needed to match data normalization
 
-	TString outstr = "v2";
+	TString outstr = "";
 	TString subcategory = "";
    if (consider_ttH) outstr += "tth";
    if ((consider_ttH) && (consider_tt)) outstr += "tth_tt";
@@ -503,42 +503,41 @@ float ymin,ymax;
 /////////////Plot ttH killer in each of the optimized categories////////////
 TString what_to_plot = "ttHScore";
 float plotmin = 0.;
-float plotmax = 0.;
+float plotmax = 1.;
 float plotprecision=0.02;
 for (int index=0;index<NCAT;index++){
 	subcategory.Form("*((%s>%.3f)&&(%s<%.3f))",what_to_opt.Data(),what_to_opt.Data(),borders[index],borders[index+1]);
-	selection_sig += subcategory;
-	selection_bg += subcategory;
 
 	TH1F *hist_plot_S = new TH1F("hist_plot_S","hist_plot_S",int((plotmax-plotmin)/plotprecision),plotmin,plotmax);
-   s.Form("%s>>hist_S",what_to_opt.Data());
-   sel.Form("%s",(selection_sig+Mgg_window).Data());
+   s.Form("%s>>hist_plot_S",what_to_plot.Data());
+   sel.Form("%s",(selection_sig+subcategory+Mgg_window).Data());
 	tree_sig->Draw(s,sel,"goff");
 
 	TH1F *hist_plot_B = new TH1F("hist_plot_B","hist_plot_B",int((plotmax-plotmin)/plotprecision),plotmin,plotmax); //200 bins
-   s.Form("%s>>hist_plot_B",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+selection_diphoton+Mgg_window).Data());
+   s.Form("%s>>hist_plot_B",what_to_plot.Data());
+   sel.Form("%s",(selection_bg+subcategory+selection_diphoton+Mgg_window).Data());
 	tree_bg->Draw(s,sel,"goff");
 
 	TH1F *hist_plot_B_ttH = new TH1F("hist_plot_B_ttH","hist_plot_B_ttH",int((plotmax-plotmin)/plotprecision),plotmin,plotmax); //200 bins
-   s.Form("%s>>hist_plot_B_ttH",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+Mgg_window).Data());
+   s.Form("%s>>hist_plot_B_ttH",what_to_plot.Data());
+   sel.Form("%s",(selection_bg+subcategory+Mgg_window).Data());
 	tree_bg_ttH->Draw(s,sel,"goff");
 	TH1F *hist_plot_B_TTGJets = new TH1F("hist_plot_B_TTGJets","hist_plot_B_TTGJets",int((plotmax-plotmin)/plotprecision),plotmin,plotmax); //200 bins
-   s.Form("%s>>hist_plot_B_TTGJets",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+Mgg_window).Data());
+   s.Form("%s>>hist_plot_B_TTGJets",what_to_plot.Data());
+   sel.Form("%s",(selection_bg+subcategory+Mgg_window).Data());
 	tree_bg_TTGJets->Draw(s,sel,"goff");
 	TH1F *hist_plot_B_TTTo2L2Nu = new TH1F("hist_plot_B_TTTo2L2Nu","hist_plot_B_TTTo2L2Nu",int((plotmax-plotmin)/plotprecision),plotmin,plotmax); //200 bins
-   s.Form("%s>>hist_plot_B_TTTo2L2Nu",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+Mgg_window).Data());
+   s.Form("%s>>hist_plot_B_TTTo2L2Nu",what_to_plot.Data());
+   sel.Form("%s",(selection_bg+subcategory+Mgg_window).Data());
 	tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
 	TH1F *hist_plot_B_TTGG_0Jets = new TH1F("hist_plot_B_TTGG_0Jets","hist_plot_B_TTGG_0Jets",int((plotmax-plotmin)/plotprecision),plotmin,plotmax); //200 bins
-   s.Form("%s>>hist_plot_B_TTGG_0Jets",what_to_opt.Data());
-   sel.Form("%s",(selection_bg+Mgg_window).Data());
+   s.Form("%s>>hist_plot_B_TTGG_0Jets",what_to_plot.Data());
+   sel.Form("%s",(selection_bg+subcategory+Mgg_window).Data());
 	tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
 
-	ymin=hist_plot_B->GetBinContent(hist_plot_B->FindFirstBinAbove(0.))*0.1;
-	ymax=hist_plot_S->GetMaximum()*1e02;
+	ymin=hist_plot_S->GetBinContent(hist_plot_S->FindFirstBinAbove(0.))*0.1;
+	ymax=hist_plot_B->GetMaximum()*1e02;
+	cout<<ymin<<"  "<<ymax<<endl;
 
 	TCanvas *c10 = new TCanvas("c10","",800,800);
 	c10->SetLogy();
@@ -551,6 +550,23 @@ for (int index=0;index<NCAT;index++){
 	frame20->SetMinimum(ymin);
 	frame20->SetMaximum(ymax);
 	frame20->Draw();
+
+
+	hist_plot_S->SetLineColor(kRed);
+	hist_plot_S->SetFillColor(kRed-7);
+	hist_plot_S->SetLineWidth(2);
+	hist_plot_B->SetLineColor(kBlue+1);
+	hist_plot_B->SetFillColor(kBlue-10);
+	hist_plot_B->SetLineWidth(2);
+	hist_plot_B_ttH->SetLineColor(kGreen+1);
+	hist_plot_B_ttH->SetLineWidth(2);
+	hist_plot_B_TTGJets->SetLineColor(kOrange+1);
+	hist_plot_B_TTGJets->SetLineWidth(2);
+	hist_plot_B_TTTo2L2Nu->SetLineColor(kMagenta+1);
+	hist_plot_B_TTTo2L2Nu->SetLineWidth(2);
+	hist_plot_B_TTGG_0Jets->SetLineColor(kViolet+1);
+	hist_plot_B_TTGG_0Jets->SetLineWidth(2);
+
 
 	hist_plot_B->Draw("HISTsame");
 	hist_plot_S->Draw("HISTsame");
@@ -570,7 +586,7 @@ for (int index=0;index<NCAT;index++){
 	pave33.Draw("same");
 	leg->Draw("same");
 	gPad->RedrawAxis();
-	sel.Form("output_plot%s_%scat%d_minevents%.0f_%s",what_to_plot.Data(),what_to_opt.Data(),NCAT,minevents,outstr.Data());
+	sel.Form("output_plot%s_%scat%d_minevents%.0f_%s",what_to_plot.Data(),what_to_opt.Data(),index,minevents,outstr.Data());
 	c10->Print(s.Format("plots/%s/%s.png",date.Data(),sel.Data()));
 	c10->Print(s.Format("plots/%s/%s.pdf",date.Data(),sel.Data()));
 
