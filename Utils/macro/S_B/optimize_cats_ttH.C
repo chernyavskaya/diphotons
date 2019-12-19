@@ -23,8 +23,8 @@ using namespace std;
 
 float calc_Z0(float S, float B)
 {
-  //return pow(S,2)/B;
-  return 2*((S+B)*log(1+S/B)-S);
+  return pow(S,2)/B;
+  //return 2*((S+B)*log(1+S/B)-S);
 }
 
 
@@ -32,9 +32,9 @@ int main(int argc, char* argv[]){
 	gROOT->ProcessLine(".x /afs/cern.ch/work/n/nchernya/setTDRStyle.C");
 	
 	TString s; 
-	TString date = "20191126";
+	TString date = "20191218";
 	TString path=s.Format("/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/%s/",date.Data());
-   date = "20191210";	
+   date = "20191218";	
 //	const int NCAT=2; //for tth killer
 	const int NCAT=4; //for MVA and MX
 /*
@@ -61,22 +61,23 @@ int main(int argc, char* argv[]){
 	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
 	if (consider_ttH)  Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
 	TString Mgg_sideband = "*((Mgg<=115)||(Mgg>=135))";
-	double tth_cut = 0.26;
+	double tth_cut = 0.24;
+//	double tth_cut = 0.;
 	TString tth_cut_s;
 	tth_cut_s.Form("*(ttHScore>%.3f)",tth_cut);
-	TString selection_sig = "weight*lumi*eventTrainedOn*2*0.587*normalization/SumWeight";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by *2 because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
-	TString selection_bg = "weight*lumi*overlapSave*normalization/SumWeight";
+	TString selection_sig = "weight*lumi*eventTrainedOn*2*0.587";   ///0.587fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by *2 because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
+	TString selection_bg = "weight*lumi*overlapSave";
 	TString selection_diphoton = "*1.5"; //SF needed to match data normalization
 
-	TString outstr = "test_bkg";
+	TString outstr = "plot_tth";
 	TString subcategory = "";
    if (consider_ttH) outstr += "tth";
    if ((consider_ttH) && (consider_tt)) outstr += "tth_tt";
 	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX*
 
 //	subcategory = "*((MVAOutputTransformed>0.7)&&(MVAOutputTransformed<1.))";
-//	subcategory = "*((MVAOutputTransformed>0.54)&&(MVAOutputTransformed<.7))";
-	subcategory = "*((MVAOutputTransformed>0.32)&&(MVAOutputTransformed<.54))";
+//	subcategory = "*((MVAOutputTransformed>0.56)&&(MVAOutputTransformed<.7))";
+	subcategory = "*((MVAOutputTransformed>0.33)&&(MVAOutputTransformed<.56))";
 	outstr += "_MVA2";
 	minevents = 8; //for bkg  # for MVA :100,  because still need to be able to split in MX
 
@@ -89,14 +90,14 @@ int main(int argc, char* argv[]){
 	TString outname = s.Format("output_SB_%s_cat%d_minevents%.0f_%s",what_to_opt.Data(),NCAT,minevents,outstr.Data());
 
 
-	TFile *file_s =  TFile::Open(path+"Total_runII_20191126.root");
+	TFile *file_s =  TFile::Open(path+"Total_runII_18_12_2019.root");
 	TTree *tree_sig = (TTree*)file_s->Get("reducedTree_sig");
 	TH1F *hist_S = new TH1F("hist_S","hist_S",int((xmax-xmin)/precision),xmin,xmax);
    s.Form("%s>>hist_S",what_to_opt.Data());
    sel.Form("%s",(selection_sig+Mgg_window+tth_cut_s).Data());
 	tree_sig->Draw(s,sel,"goff");
 
-	TFile *file_bg =  TFile::Open(path+"Total_runII_20191126.root");
+	TFile *file_bg =  TFile::Open(path+"Total_runII_18_12_2019.root");
 	TTree *tree_bg = (TTree*)file_bg->Get("reducedTree");
 	TTree *tree_bg_ttH = (TTree*)file_bg->Get("reducedTree_bkg_ttH");
 	TTree *tree_bg_TTGJets = (TTree*)file_bg->Get("reducedTree_bkg_TTGJets");
@@ -327,7 +328,7 @@ do {
 	tree_bg->Draw(s,sel,"goff"); //only add diphoton to the sideband
    s.Form("%s>>+hist_B_cut_sideband",what_to_opt.Data());
    sel.Form("%s",(selection_bg+Mgg_sideband+tth_cut_s).Data());
-	if (consider_ttH) {
+/*	if (consider_ttH) {
 		tree_bg_ttH->Draw(s,sel,"goff");
 	}
 	if (consider_tt) {
@@ -335,7 +336,7 @@ do {
 		tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
 		tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
 	}	
-
+*/
 	do {
 		max_n[0]=0;
 		sig_n[0] = hist_S_cut->Integral(1,hist_S_cut->FindBin(start_n[0])-1);
@@ -676,7 +677,9 @@ for (int index=0;index<1;index++){ // first is ttH
 	double* sign_scan = &sign_gr_vec[0];
 	int counter = sign_gr_vec.size();
 	TGraph *gr =new TGraph(counter,cat_scan,sign_scan);
-	ymin = *std::max_element(sign_scan,sign_scan+counter) * 0.5;
+//	ymin = *std::min_element(sign_scan,sign_scan+counter) * 0.95;
+//	ymax = *std::max_element(sign_scan,sign_scan+counter) * 1.05;
+	ymin = *std::min_element(sign_scan,sign_scan+counter) * 0.6;
 	ymax = *std::max_element(sign_scan,sign_scan+counter) * 1.1;
 	int max_pos = std::distance(sign_scan, std::max_element(sign_scan,sign_scan+counter));
 
@@ -689,6 +692,7 @@ for (int index=0;index<1;index++){ // first is ttH
 	frame3->SetYTitle("S/#sqrt{B}");
 	frame3->GetYaxis()->SetTitleOffset(1.32);
 	frame3->SetXTitle(s.Format("%s",what_to_opt.Data()));	
+	if (index==0) frame3->SetXTitle(s.Format("%s",what_to_plot.Data()));	
 	frame3->SetMinimum(ymin);
 	frame3->SetMaximum(ymax);
 	frame3->Draw();
