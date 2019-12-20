@@ -34,9 +34,14 @@ int main(int argc, char* argv[]){
 	TString s; 
 	TString date = "20191218";
 	TString path=s.Format("/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/%s/",date.Data());
-   date = "20191218";	
+	TString file_name =  "Total_runII_wo_Mjj_18_12_2019.root";
+//	TString file_name =  "Total_runII_18_12_2019.root";
+   //date = "20191218_wo_Mjj";	
+   date = "20191218_wo_Mjj_ttH_ttgg";	
+  // date = "20191218_ttHScore";	
 //	const int NCAT=2; //for tth killer
 	const int NCAT=4; //for MVA and MX
+
 /*
 	TString what_to_opt = "MVAOutputTransformed";
 	double xmin = 0.;
@@ -49,19 +54,22 @@ int main(int argc, char* argv[]){
 	double xmax = 800;
 	Double_t precision=5;  //0.01 for MVA, 5 for MX
 
-
-/*	TString what_to_opt = "ttHScore";
+/*
+	TString what_to_opt = "ttHScore";
 	double xmin = 0.;
 	double xmax = 1.;
 	Double_t precision=0.02;  //0.01 for MVA, 5 for MX
 */
 
+	string what_to_opt_str(what_to_opt.Data());
+
 	bool consider_ttH = false;
 	bool consider_tt = false;
 	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
 	if (consider_ttH)  Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
+	if ((consider_ttH) && (consider_tt))  Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
 	TString Mgg_sideband = "*((Mgg<=115)||(Mgg>=135))";
-	double tth_cut = 0.24;
+	double tth_cut = 0.2;
 //	double tth_cut = 0.;
 	TString tth_cut_s;
 	tth_cut_s.Form("*(ttHScore>%.3f)",tth_cut);
@@ -75,11 +83,12 @@ int main(int argc, char* argv[]){
    if ((consider_ttH) && (consider_tt)) outstr += "tth_tt";
 	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX*
 
-//	subcategory = "*((MVAOutputTransformed>0.7)&&(MVAOutputTransformed<1.))";
-//	subcategory = "*((MVAOutputTransformed>0.56)&&(MVAOutputTransformed<.7))";
-	subcategory = "*((MVAOutputTransformed>0.33)&&(MVAOutputTransformed<.56))";
+//	subcategory = "*((MVAOutputTransformed>0.75)&&(MVAOutputTransformed<1.))";
+//	subcategory = "*((MVAOutputTransformed>0.54)&&(MVAOutputTransformed<.75))";
+	subcategory = "*((MVAOutputTransformed>0.3)&&(MVAOutputTransformed<.54))";
 	outstr += "_MVA2";
 	minevents = 8; //for bkg  # for MVA :100,  because still need to be able to split in MX
+	
 
 
 	selection_sig += subcategory;
@@ -90,14 +99,15 @@ int main(int argc, char* argv[]){
 	TString outname = s.Format("output_SB_%s_cat%d_minevents%.0f_%s",what_to_opt.Data(),NCAT,minevents,outstr.Data());
 
 
-	TFile *file_s =  TFile::Open(path+"Total_runII_18_12_2019.root");
+	
+   TFile *file_s =  TFile::Open(path+file_name);
 	TTree *tree_sig = (TTree*)file_s->Get("reducedTree_sig");
 	TH1F *hist_S = new TH1F("hist_S","hist_S",int((xmax-xmin)/precision),xmin,xmax);
    s.Form("%s>>hist_S",what_to_opt.Data());
    sel.Form("%s",(selection_sig+Mgg_window+tth_cut_s).Data());
 	tree_sig->Draw(s,sel,"goff");
 
-	TFile *file_bg =  TFile::Open(path+"Total_runII_18_12_2019.root");
+   TFile *file_bg =  TFile::Open(path+file_name);
 	TTree *tree_bg = (TTree*)file_bg->Get("reducedTree");
 	TTree *tree_bg_ttH = (TTree*)file_bg->Get("reducedTree_bkg_ttH");
 	TTree *tree_bg_TTGJets = (TTree*)file_bg->Get("reducedTree_bkg_TTGJets");
@@ -108,11 +118,16 @@ int main(int argc, char* argv[]){
    s.Form("%s>>hist_B",what_to_opt.Data());
    sel.Form("%s",(selection_bg+selection_diphoton+Mgg_window+tth_cut_s).Data());
 	tree_bg->Draw(s,sel,"goff");
+	if ((what_to_opt_str.compare("ttHScore")) == 0) {
+   	sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
+		tree_bg_ttH->Draw(s,sel,"goff");
+	}
 
 	TH1F *hist_B_ttH = new TH1F("hist_B_ttH","hist_B_ttH",int((xmax-xmin)/precision),xmin,xmax); //200 bins
    s.Form("%s>>hist_B_ttH",what_to_opt.Data());
    sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
 	tree_bg_ttH->Draw(s,sel,"goff");
+
 	TH1F *hist_B_TTGJets = new TH1F("hist_B_TTGJets","hist_B_TTGJets",int((xmax-xmin)/precision),xmin,xmax); //200 bins
    s.Form("%s>>hist_B_TTGJets",what_to_opt.Data());
    sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
@@ -275,7 +290,7 @@ double tth_max = 0.;
 double tth_inc = 0.02;
 if (consider_ttH) {
 	tth_cut = 0.1;
-	tth_max = 0.4;
+	tth_max = 0.5;
 	tth_inc = 0.02;
 }
 int tth_cut_idx = 0;
@@ -311,14 +326,19 @@ do {
    s.Form("%s>>hist_B_cut",what_to_opt.Data());
    sel.Form("%s",(selection_bg+selection_diphoton+Mgg_window+tth_cut_s).Data());
 	tree_bg->Draw(s,sel,"goff");
+	if ((what_to_opt_str.compare("ttHScore")) == 0) {
+   	sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
+		tree_bg_ttH->Draw(s,sel,"goff");
+	}
+
    s.Form("%s>>+hist_B_cut",what_to_opt.Data());
    sel.Form("%s",(selection_bg+Mgg_window+tth_cut_s).Data());
 	if (consider_ttH) {
 		tree_bg_ttH->Draw(s,sel,"goff");
 	}
 	if (consider_tt) {
-		tree_bg_TTGJets->Draw(s,sel,"goff");
-		tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
+	//	tree_bg_TTGJets->Draw(s,sel,"goff");
+	//	tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
 		tree_bg_TTGG_0Jets->Draw(s,sel,"goff");
 	}
 
@@ -326,6 +346,7 @@ do {
    s.Form("%s>>hist_B_cut_sideband",what_to_opt.Data());
    sel.Form("%s",(selection_bg+selection_diphoton+Mgg_sideband+tth_cut_s).Data());
 	tree_bg->Draw(s,sel,"goff"); //only add diphoton to the sideband
+
    s.Form("%s>>+hist_B_cut_sideband",what_to_opt.Data());
    sel.Form("%s",(selection_bg+Mgg_sideband+tth_cut_s).Data());
 /*	if (consider_ttH) {
@@ -537,11 +558,11 @@ for (int index=0;index<NCAT;index++){
 	TH1F *hist_plot_B_TTGJets = new TH1F("hist_plot_B_TTGJets","hist_plot_B_TTGJets",int((plotmax-plotmin)/plotprecision),plotmin,plotmax); //200 bins
    s.Form("%s>>hist_plot_B_TTGJets",what_to_plot.Data());
    sel.Form("%s",(selection_bg+subcategory+Mgg_window).Data());
-	tree_bg_TTGJets->Draw(s,sel,"goff");
+//	tree_bg_TTGJets->Draw(s,sel,"goff");
 	TH1F *hist_plot_B_TTTo2L2Nu = new TH1F("hist_plot_B_TTTo2L2Nu","hist_plot_B_TTTo2L2Nu",int((plotmax-plotmin)/plotprecision),plotmin,plotmax); //200 bins
    s.Form("%s>>hist_plot_B_TTTo2L2Nu",what_to_plot.Data());
    sel.Form("%s",(selection_bg+subcategory+Mgg_window).Data());
-	tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
+//	tree_bg_TTTo2L2Nu->Draw(s,sel,"goff");
 	TH1F *hist_plot_B_TTGG_0Jets = new TH1F("hist_plot_B_TTGG_0Jets","hist_plot_B_TTGG_0Jets",int((plotmax-plotmin)/plotprecision),plotmin,plotmax); //200 bins
    s.Form("%s>>hist_plot_B_TTGG_0Jets",what_to_plot.Data());
    sel.Form("%s",(selection_bg+subcategory+Mgg_window).Data());
@@ -670,7 +691,7 @@ chosen_significance_scan.push_back(significance_scans3_vec[tth_cut_idx_final]);
 chosen_significance_scan.push_back(significance_scans4_vec[tth_cut_idx_final]);
 
 //for (int index=0;index<NCAT+1;index++){ // first is ttH
-for (int index=0;index<1;index++){ // first is ttH
+for (int index=0;index<2;index++){ // first is ttH
    std::vector<double> cat_gr_vec = chosen_categories_scan[index];
    std::vector<double> sign_gr_vec = chosen_significance_scan[index];
 	double* cat_scan = &cat_gr_vec[0];
