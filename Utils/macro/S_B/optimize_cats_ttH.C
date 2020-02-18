@@ -36,25 +36,23 @@ int main(int argc, char* argv[]){
 	TString path=s.Format("/afs/cern.ch/work/n/nchernya/ETH/DiHiggs/optimization_files/%s/",date.Data());
 //	TString file_name =  "Total_runII_wo_Mjj_18_12_2019_upd.root";
 //	TString file_name =  "Total_runII_24_01_2020.root";
-	TString file_name =  "Total_runII_24_01_2020_leptonveto.root";
-  	date.Append("_leptonveto");	
+	TString file_name =  "Total_runII_24_01_2020_leptonveto_woMjj.root";
+  	date.Append("_new_woMjj");	
 //	const int NCAT=2; //for tth killer
 	const int NCAT=4; //for MVA and MX
 
-
-//	TString what_to_opt = "MVAOutputTransformed";
+	TString what_to_opt = "MVAOutputTransformed";
 //	TString what_to_opt = "ClassificationBDTTransformed";
-/*	TString what_to_opt = "HHbbggMVA";
+//	TString what_to_opt = "HHbbggMVA";
 	double xmin = 0.;
 	double xmax = 1.;
 	Double_t precision=0.01;  //0.01 for MVA, 5 for MX
-*/
 
-	TString what_to_opt = "MX";
-	double xmin = 250;
-	double xmax = 800;
-	Double_t precision=5;  //0.01 for MVA, 5 for MX
-
+/*
+	what_to_opt = "MX";
+	xmin = 250;
+	xmax = 800;
+	precision=10; */ //0.01 for MVA, 5 for MX, but 10 GeV is safer, chosen for the training without Mjj
 /*
 	TString what_to_opt = "ttHScore";
 	double xmin = 0.;
@@ -77,31 +75,35 @@ int main(int argc, char* argv[]){
 //	double tth_cut = 0.0;
 	TString tth_cut_s;
 	tth_cut_s.Form("*(ttHScore>%.3f)",tth_cut);
-	TString selection_sig = "weight*lumi*eventTrainedOn*2*0.5*((nElectrons2018+nMuons2018)==0)";   ///0.5fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by *2 because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
-	TString selection_bg = "weight*lumi*overlapSave*((nElectrons2018+nMuons2018)==0)";
+	//TString selection_sig = "weight*lumi*eventTrainedOn*2*0.5*((nElectrons2018+nMuons2018)==0)";   ///0.5fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by *2 because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
+	TString selection_sig = "weight*lumi*eventTrainedOn*2*0.5";   ///0.5fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by *2 because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
+	//TString selection_bg = "weight*lumi*overlapSave*((nElectrons2018+nMuons2018)==0)";
+	TString selection_bg = "weight*lumi*overlapSave";
 	TString selection_diphoton = "*2.9"; //SF needed to match data normalization
 //	TString selection_diphoton = "*1.5"; //SF needed to match data normalization
 	TString tthSF = "*1."; //SF 
 
-	TString outstr = "_leptonveto_notth";
+	TString outstr = "_woMjj";
 	TString subcategory = "";
    if ((consider_ttH) && (consider_tt) && (consider_tt2l) && (consider_ttgjet)) outstr += "tth_tt";
    else if ((consider_ttH) && (consider_tt) && (consider_ttgjet)) outstr += "tth_tt_nott2l";
    else if ((consider_ttH) && (consider_tt)) outstr += "tth_tt_nott2l_nottgj";
    else if (consider_ttH) outstr += "tth";
+	double minevents = 150; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX*
+//	double minevents = 90; //had to go 90 for the traing without Mjj
 //	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX*
-//	double minevents = 72; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX*
-	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX*
 
 //	subcategory = "*((MVAOutputTransformed>0.75)&&(MVAOutputTransformed<1.))";
 //	subcategory = "*((MVAOutputTransformed>0.54)&&(MVAOutputTransformed<.75))";
 //	subcategory = "*((MVAOutputTransformed>0.3)&&(MVAOutputTransformed<.54))";
 //
-//	subcategory = "*((HHbbggMVA>=0.79)&&(HHbbggMVA<1.))";
-//	subcategory = "*((HHbbggMVA>=0.67)&&(HHbbggMVA<.79))";
-	subcategory = "*((HHbbggMVA>=0.44)&&(HHbbggMVA<.67))";
- 	outstr += "_MVA2";
-	minevents = 6; //for bkg  # for MVA :100,  because still need to be able to split in MX
+//	subcategory = "*((HHbbggMVA>=0.78)&&(HHbbggMVA<1.))";
+//	subcategory = "*((HHbbggMVA>=0.62)&&(HHbbggMVA<.78))";
+//	subcategory = "*((HHbbggMVA>=0.37)&&(HHbbggMVA<.62))";
+ //	outstr += "_MVA0";
+//	minevents = 6; //for bkg  # for MVA :100,  because still need to be able to split in MX
+
+	double bkg_unc = 0.50;
 	
 
 
@@ -304,6 +306,7 @@ double borders[10] = {};   // including START and END
 borders[0] = START;
 double sig_n[10] = {0,0,0,0,0,0,0,0,0,0};
 double bkg_n[10] = {0,0,0,0,0,0,0,0,0,0};
+double ebkg_n[10] = {0,0,0,0,0,0,0,0,0,0};
 double bkg_n_tth[10] = {0,0,0,0,0,0,0,0,0,0};
 double bkg_sideband_n[10] = {0,0,0,0,0,0,0,0,0,0};
 double max_n[10] = {0,0,0,0,0,0,0,0,0,0};
@@ -320,6 +323,7 @@ double sig_yields[10] = {0,0,0,0,0,0,0,0,0,0};
 for (int index=0;index<NCAT;index++)
 	start_n[index]=START+(index+1)*precision; 
 int minevt_cond_n[10] = {};
+int ebkg_cond_n[10] = {};
 
 double tth_max = 0.;
 double tth_inc = 0.02;
@@ -416,7 +420,7 @@ if (consider_ttH) {
 	do {
 		max_n[0]=0;
 		sig_n[0] = hist_S_cut->Integral(1,hist_S_cut->FindBin(start_n[0])-1);
-		bkg_n[0] = hist_B_cut->Integral(1,hist_B_cut->FindBin(start_n[0])-1);
+		bkg_n[0] = hist_B_cut->IntegralAndError(1,hist_B_cut->FindBin(start_n[0])-1,ebkg_n[0]);
 		bkg_sideband_n[0] = hist_B_cut_sideband->Integral(1,hist_B_cut_sideband->FindBin(start_n[0])-1);
 		//if (bkg_n[0]!=0) max_n[0]=pow(sig_n[0],2)/(bkg_n[0]);
 		if (bkg_n[0]!=0) max_n[0]=calc_Z0(sig_n[0],bkg_n[0]);
@@ -428,7 +432,7 @@ if (consider_ttH) {
 		do {
 			max_n[1]=0;
 			sig_n[1] = hist_S_cut->Integral(hist_S_cut->FindBin(start_n[0]),hist_S_cut->FindBin(start_n[1])-1);
-			bkg_n[1] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[0]),hist_B_cut->FindBin(start_n[1])-1);
+			bkg_n[1] = hist_B_cut->IntegralAndError(hist_B_cut->FindBin(start_n[0]),hist_B_cut->FindBin(start_n[1])-1,ebkg_n[1]);
 			bkg_sideband_n[1] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[0]),hist_B_cut_sideband->FindBin(start_n[1])-1);
 		//	if (bkg_n[1]!=0) max_n[1]=pow(sig_n[1],2)/(bkg_n[1]);
 			if (bkg_n[1]!=0) max_n[1]=calc_Z0(sig_n[1],bkg_n[1]);
@@ -445,7 +449,7 @@ if (consider_ttH) {
 					bkg_sideband_n[2] = 1; 
 				} else {
 					sig_n[2] = hist_S_cut->Integral(hist_S_cut->FindBin(start_n[1]),hist_S_cut->FindBin(start_n[2])-1);
-					bkg_n[2] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[1]),hist_B_cut->FindBin(start_n[2])-1);
+					bkg_n[2] = hist_B_cut->IntegralAndError(hist_B_cut->FindBin(start_n[1]),hist_B_cut->FindBin(start_n[2])-1,ebkg_n[2]);
 					bkg_sideband_n[2] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[1]),hist_B_cut_sideband->FindBin(start_n[2])-1);
 				}
 			//	if (bkg_n[2]!=0) max_n[2]=pow(sig_n[2],2)/(bkg_n[2]);
@@ -463,7 +467,7 @@ if (consider_ttH) {
 						bkg_sideband_n[3] = 1; 
 					} else {
 						sig_n[3] = hist_S_cut->Integral(hist_S_cut->FindBin(start_n[2]),hist_S_cut->FindBin(start_n[3])-1);
-						bkg_n[3] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[2]),hist_B_cut->FindBin(start_n[3])-1);
+						bkg_n[3] = hist_B_cut->IntegralAndError(hist_B_cut->FindBin(start_n[2]),hist_B_cut->FindBin(start_n[3])-1,ebkg_n[3]);
 						bkg_sideband_n[3] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[2]),hist_B_cut_sideband->FindBin(start_n[3])-1);
 					}
 					//if (bkg_n[3]!=0) max_n[3]=pow(sig_n[3],2)/(bkg_n[3]);
@@ -479,7 +483,7 @@ if (consider_ttH) {
                   bkg_sideband_n[4] = 1.;
                } else {
 						sig_n[4] = hist_S_cut->Integral(hist_S_cut->FindBin(start_n[3]),hist_S_cut->GetNbinsX()+1);
-						bkg_n[4] = hist_B_cut->Integral(hist_B_cut->FindBin(start_n[3]),hist_B_cut->GetNbinsX()+1);
+						bkg_n[4] = hist_B_cut->IntegralAndError(hist_B_cut->FindBin(start_n[3]),hist_B_cut->GetNbinsX()+1,ebkg_n[4]);
 						bkg_sideband_n[4] = hist_B_cut_sideband->Integral(hist_B_cut_sideband->FindBin(start_n[3]),hist_B_cut_sideband->GetNbinsX()+1);
                }
 				//	if (bkg_n[4]!=0) max_n[4]=pow(sig_n[4],2)/(bkg_n[4]);
@@ -491,13 +495,18 @@ if (consider_ttH) {
 
 					double max_sum = 0;
 					int minevt_cond = 0; //condition is false
+					int ebkg_cond = 0; //condition is false
 					for (int index=0;index<NCAT;index++){
 						max_sum+=max_n[index];
 						minevt_cond_n[index] = (bkg_sideband_n[index]>minevents);
+                  if (bkg_n[index]!=0){
+								ebkg_cond_n[index] = ((ebkg_n[index]/bkg_n[index])<=bkg_unc);
+						}
 					}
 					minevt_cond = std::accumulate(minevt_cond_n, minevt_cond_n + NCAT, 0);
-					if (minevt_cond==NCAT) significance = sqrt(max_sum);
-					if (((max_sum)>=max) && (minevt_cond==(NCAT))) {
+					ebkg_cond = std::accumulate(ebkg_cond_n, ebkg_cond_n + NCAT, 0);
+					if ((minevt_cond==NCAT) && (ebkg_cond==NCAT)) significance = sqrt(max_sum);
+					if (((max_sum)>=max) && (minevt_cond==(NCAT) && (ebkg_cond==NCAT))) {
 						max = max_sum;
 						max_total = max_sum;
 						tth_cut_final = tth_cut;
