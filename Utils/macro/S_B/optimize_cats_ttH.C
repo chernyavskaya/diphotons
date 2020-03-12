@@ -37,9 +37,11 @@ int main(int argc, char* argv[]){
 //	TString file_name =  "Total_runII_wo_Mjj_18_12_2019_upd.root";
 //	TString file_name =  "Total_runII_24_01_2020.root";
 	TString file_name =  "Total_runII_24_01_2020_leptonveto_woMjj.root";
-  	date.Append("_new_woMjj");	
+ // 	date.Append("_new_woMjj_MVA_MX_node6");	
+  	date.Append("_new_woMjj_MVA_MX_correct_test");	
 //	const int NCAT=2; //for tth killer
 	const int NCAT=4; //for MVA and MX
+
 
 	TString what_to_opt = "MVAOutputTransformed";
 //	TString what_to_opt = "ClassificationBDTTransformed";
@@ -48,11 +50,13 @@ int main(int argc, char* argv[]){
 	double xmax = 1.;
 	Double_t precision=0.01;  //0.01 for MVA, 5 for MX
 
-/*
+
 	what_to_opt = "MX";
 	xmin = 250;
 	xmax = 800;
-	precision=10; */ //0.01 for MVA, 5 for MX, but 10 GeV is safer, chosen for the training without Mjj
+	precision=10;  //0.01 for MVA, 5 for MX, but 10 GeV is safer, chosen for the training without Mjj
+
+
 /*
 	TString what_to_opt = "ttHScore";
 	double xmin = 0.;
@@ -67,6 +71,8 @@ int main(int argc, char* argv[]){
 	bool consider_tt2l = false;
 	bool consider_ttgjet = false;
 	TString Mgg_window = "*((Mgg>115)&&(Mgg<135))";
+//	TString Mgg_window_s = "*((CMS_hgg_mass>115)&&(CMS_hgg_mass<135))";
+	TString Mgg_window_s = "*((Mgg>115)&&(Mgg<135))";
 	if (consider_ttH)  Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
 	if ((consider_ttH) && (consider_tt))  Mgg_window = "*((Mgg>122)&&(Mgg<128))"; // this narrow window only for ttH
 //	TString Mgg_sideband = "*((Mgg<=115)||(Mgg>=135))";
@@ -77,6 +83,7 @@ int main(int argc, char* argv[]){
 	tth_cut_s.Form("*(ttHScore>%.3f)",tth_cut);
 	//TString selection_sig = "weight*lumi*eventTrainedOn*2*0.5*((nElectrons2018+nMuons2018)==0)";   ///0.5fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by *2 because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
 	TString selection_sig = "weight*lumi*eventTrainedOn*2*0.5";   ///0.5fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by *2 because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
+//	TString selection_sig = "weight*lumi*0.5";   ///0.5fb expected limit for sideband run II, divide by 3 if using mix of SM,3 and box. In addition multiply by *2 because we only optimize ont he same events we train (half of all) so we need to scale the cross section accordingly
 	//TString selection_bg = "weight*lumi*overlapSave*((nElectrons2018+nMuons2018)==0)";
 	TString selection_bg = "weight*lumi*overlapSave";
 	TString selection_diphoton = "*2.9"; //SF needed to match data normalization
@@ -89,22 +96,25 @@ int main(int argc, char* argv[]){
    else if ((consider_ttH) && (consider_tt) && (consider_ttgjet)) outstr += "tth_tt_nott2l";
    else if ((consider_ttH) && (consider_tt)) outstr += "tth_tt_nott2l_nottgj";
    else if (consider_ttH) outstr += "tth";
-	double minevents = 150; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX*
-//	double minevents = 90; //had to go 90 for the traing without Mjj
-//	double minevents = 45; //for bkg  # for MVA : 70 data in sidebands after tth killer -> 70/1.5 -> before tth killer *1.2 = 56,  because still need to be able to split in MX*
+//	double minevents = 150; //for MX does not matter so much, 50 gives the same result 
+	double minevents = 90; //had to go 90 for the traing without Mjj
+//	double minevents = 45; // for 1D MVA optimization
+	double bkg_unc = 0.30;
 
-//	subcategory = "*((MVAOutputTransformed>0.75)&&(MVAOutputTransformed<1.))";
-//	subcategory = "*((MVAOutputTransformed>0.54)&&(MVAOutputTransformed<.75))";
-//	subcategory = "*((MVAOutputTransformed>0.3)&&(MVAOutputTransformed<.54))";
-//
-//	subcategory = "*((HHbbggMVA>=0.78)&&(HHbbggMVA<1.))";
-//	subcategory = "*((HHbbggMVA>=0.62)&&(HHbbggMVA<.78))";
-//	subcategory = "*((HHbbggMVA>=0.37)&&(HHbbggMVA<.62))";
- //	outstr += "_MVA0";
-//	minevents = 6; //for bkg  # for MVA :100,  because still need to be able to split in MX
+//	subcategory = "*((MVAOutputTransformed>0.78)&&(MVAOutputTransformed<1.))";
+//	subcategory = "*((MVAOutputTransformed>0.62)&&(MVAOutputTransformed<.78))";
+	subcategory = "*((MVAOutputTransformed>0.37)&&(MVAOutputTransformed<.62))";
+ 	outstr += "_MVA2";
+	minevents = 6; //for bkg  # for MVA :100,  because still need to be able to split in MX
 
-	double bkg_unc = 0.50;
 	
+//	subcategory = "*(MVAOutputTransformed>0.25)";
+//	subcategory = "*((MX>460)&&(MX<10000))";
+//	subcategory = "*((MX>350)&&(MX<460))";
+//	subcategory = "*((MX>300)&&(MX<350))";
+//	subcategory = "*((MX>250)&&(MX<300))";
+ //	outstr += "_MX3";
+//	minevents = 6; //for bkg  # for MVA :100,  because still need to be able to split in MX
 
 
 	selection_sig += subcategory;
@@ -117,10 +127,12 @@ int main(int argc, char* argv[]){
 
 	
    TFile *file_s =  TFile::Open(path+file_name);
+//	TString file_name_s =  "hh_node_6_woMjj.root";
+//   TFile *file_s =  TFile::Open(path+file_name_s);
 	TTree *tree_sig = (TTree*)file_s->Get("reducedTree_sig");
 	TH1F *hist_S = new TH1F("hist_S","hist_S",int((xmax-xmin)/precision),xmin,xmax);
    s.Form("%s>>hist_S",what_to_opt.Data());
-   sel.Form("%s",(selection_sig+Mgg_window+tth_cut_s).Data());
+   sel.Form("%s",(selection_sig+Mgg_window_s+tth_cut_s).Data());
 	tree_sig->Draw(s,sel,"goff");
 
    TFile *file_bg =  TFile::Open(path+file_name);
@@ -361,7 +373,7 @@ do {
 
 	TH1F *hist_S_cut = new TH1F("hist_S_cut","hist_S_cut",int((xmax-xmin)/precision),xmin,xmax);
    s.Form("%s>>hist_S_cut",what_to_opt.Data());
-   sel.Form("%s",(selection_sig+Mgg_window+tth_cut_s).Data());
+   sel.Form("%s",(selection_sig+Mgg_window_s+tth_cut_s).Data());
 	tree_sig->Draw(s,sel,"goff");
 
 	TH1F *hist_B_cut = new TH1F("hist_B_cut","hist_B_cut",int((xmax-xmin)/precision),xmin,xmax); //200 bins
@@ -543,7 +555,6 @@ significance_scans3_vec.push_back(significance_scans3);
 significance_scans4_vec.push_back(significance_scans4);
 significance_scans_tth.push_back(significance);
 
-} while (tth_cut<tth_max);
 
 	borders[NCAT] = END;
 
@@ -608,7 +619,7 @@ for (int index=0;index<NCAT;index++){
 
 	TH1F *hist_plot_S = new TH1F("hist_plot_S","hist_plot_S",int((plotmax-plotmin)/plotprecision),plotmin,plotmax);
    s.Form("%s>>hist_plot_S",what_to_plot.Data());
-   sel.Form("%s",(selection_sig+subcategory+Mgg_window).Data());
+   sel.Form("%s",(selection_sig+subcategory+Mgg_window_s).Data());
 	tree_sig->Draw(s,sel,"goff");
 
 	TH1F *hist_plot_B = new TH1F("hist_plot_B","hist_plot_B",int((plotmax-plotmin)/plotprecision),plotmin,plotmax); //200 bins
@@ -769,7 +780,7 @@ chosen_significance_scan.push_back(significance_scans3_vec[tth_cut_idx_final]);
 chosen_significance_scan.push_back(significance_scans4_vec[tth_cut_idx_final]);
 
 //for (int index=0;index<NCAT+1;index++){ // first is ttH
-for (int index=0;index<2;index++){ // first is ttH
+for (int index=0;index<2;index++){ // first is ttH  # only makes sense for ttH
    std::vector<double> cat_gr_vec = chosen_categories_scan[index];
    std::vector<double> sign_gr_vec = chosen_significance_scan[index];
 	double* cat_scan = &cat_gr_vec[0];
